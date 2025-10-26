@@ -3,6 +3,7 @@
   imports = [
     ./cursor.nix
     ./cal.nix
+    #./zips
   ];
 
   programs.appimage = {

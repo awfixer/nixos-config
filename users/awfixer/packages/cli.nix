@@ -3,20 +3,15 @@
 let
 
 cli = with pkgs; [
-  graphite-cli
   eza
   fd
   ffmpeg
   openssl
-  gnumake
   jc
   jq
-  just
   killall
   libnotify
-  openssl
   ouch
-  pkg-config
   ripgrep
   sd
   tree
@@ -25,6 +20,7 @@ cli = with pkgs; [
   wget
   wl-clipboard
   zip
+  gnutar
 ];
 in
 

@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./nix.nix
-    ./nixpkgs.nix
+    ./appimage
+    ./zips
   ];
 }

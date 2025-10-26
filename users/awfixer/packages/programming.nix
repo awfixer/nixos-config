@@ -5,6 +5,12 @@ let
 programming = with pkgs; [
   go
   hugo
+  gcc
+  cmake
+  meson
+  nim
+  ninja
+  zig
   elixir
   gleam
   rustup
@@ -12,18 +18,24 @@ programming = with pkgs; [
   sdkmanager
   python314
   pnpm
+  bun
+  yarn
   nodejs
   llvm
   ruby
-  railway
   rails-new
-  doctl
   deno
   wasm-tools
   wasm
   wasm-pack
   uv
   poetry
+  meld
+  nim
+  vlang
+  clamav
+  zig
+  kotlin
 ];
 
 in
