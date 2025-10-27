@@ -3,24 +3,34 @@
 let
 
 cli = with pkgs; [
+  graphite-cli
   eza
   fd
   ffmpeg
-  openssl
+  gem
+  gh
+  git
+  glab
+  gnumake
   jc
   jq
+  just
   killall
   libnotify
+  openssl
   ouch
+  pkg-config
+  pnpm
+  python314
   ripgrep
   sd
   tree
   unzip
+  uv
   watchexec
   wget
   wl-clipboard
   zip
-  gnutar
 ];
 in
 

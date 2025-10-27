@@ -3,14 +3,16 @@
 let
 
 base = with pkgs; [
-  obsidian
-  standardnotes
-  claude-code
-  gemini-cli
+  simplex-chat-desktop
+  session-desktop
+  telegram-desktop
+  signal-desktop
   qbittorrent-enhanced
   clapper
   clapper-enhancers
   protonvpn-gui
+  proton-pass
+  hugo
   go
 ];
 

@@ -10,7 +10,7 @@ with lib;
   home.packages = [ pkgs.git-crypt ];
   programs.git = {
     userName = "awfixer";
-    userEmail = "github@awfixer.me";
+    userEmail = "git@awfixer.me";
     enable = true;
     delta = {
       enable = true;
@@ -43,7 +43,7 @@ with lib;
         && nixosConfig.programs._1password-gui.sshAgent
       ) "${nixosConfig.programs._1password-gui.package}/bin/op-ssh-sign";
       commit.gpgsign = true;
-      user.signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHgScIZg527PNvtCt84Zf0AlFTgJ6A08BE3X7wwvPJIR";
+      user.signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOmpNrKH1BuCb+nZWAMSWVT9Xo2sksRPkS1d7p8+iJRu";
       push.autoSetupRemote = true;
       merge.tool = "meld";
     };
