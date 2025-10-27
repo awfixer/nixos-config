@@ -96,6 +96,7 @@
             inherit system;
             modules = [
               chaotic.nixosModules.default
+              ./hardware-configuration.nix
             ];
             specialArgs = { inherit inputs; };
           };
