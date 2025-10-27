@@ -2,7 +2,7 @@ let
   aliasList = [
     { name = "g"; value = "git"; }
     { name = "clean"; value = "sudo nix-collect-garbage -d"; }
-    { name ="flake"; value = "clean && sudo nixos-rebuild switch --flake . --impure --verbose --upgrade"; }
+    { name ="flake"; value = "clean && source .env 2>/dev/null && sudo nixos-rebuild switch --flake . --impure --verbose --upgrade --option access-tokens \"$ACCESS_TOKENS\""; }
     { name = "ll"; value = "ls -lha"; }
     { name = "cp"; value = "cp -r"; }
     { name = "dinit"; value = "devbox init"; }
