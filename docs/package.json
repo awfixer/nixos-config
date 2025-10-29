@@ -1,0 +1,29 @@
+{
+  "name": "awfixer-nixos-docs",
+  "version": "1.0.0",
+  "description": "Documentation for AWFixer's NixOS Configuration",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "serve": "vitepress serve"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "nixos",
+    "nix",
+    "documentation",
+    "linux",
+    "configuration",
+    "flakes"
+  ],
+  "author": "AWFixer",
+  "license": "MIT"
+}

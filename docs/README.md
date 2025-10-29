@@ -1,191 +1,191 @@
-# AWFixer's NixOS Configuration Documentation
+# NixOS Configuration Documentation Website
 
-Welcome to the comprehensive documentation for this NixOS configuration. This repository contains a complete, modular NixOS setup using Nix Flakes that manages both system-level (NixOS) and user-level (Home Manager) configurations.
+This directory contains the source code for the documentation website built with [VitePress](https://vitepress.dev/).
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- NixOS system (22.11+ recommended)
-- Git
-- Basic understanding of Nix concepts
-
-### Initial Setup
 ```bash
-# Clone the repository
-git clone <your-repo-url> /path/to/nixos-config
-cd /path/to/nixos-config
+# Install dependencies
+npm install
 
-# Apply the configuration
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## 📁 Structure
+
+```
+docs/
+├── .vitepress/
+│   ├── config.mts          # VitePress configuration
+│   └── theme/              # Custom theme files
+├── public/                 # Static assets
+├── *.md                   # Documentation pages
+├── package.json           # Dependencies
+└── vercel.json           # Vercel deployment config
+```
+
+## 🛠️ Development
+
+### Adding New Pages
+
+1. Create a new `.md` file in the docs directory
+2. Add frontmatter with title and description
+3. Update navigation in `.vitepress/config.mts`
+
+### Styling
+
+Custom styles are in `.vitepress/theme/custom.css`. The theme extends the default VitePress theme with NixOS-specific styling.
+
+### Assets
+
+Place static assets in the `public/` directory. They'll be available at the root URL.
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. Connect your GitHub repository to Vercel
+2. Set the root directory to `docs`
+3. Vercel will automatically detect and deploy the VitePress site
+
+### Manual Deployment
+
+```bash
+# Build the site
+npm run build
+
+# Deploy the .vitepress/dist directory
+```
+
+## 📝 Writing Documentation
+
+### Frontmatter
+
+Each page should include frontmatter:
+
+```yaml
+---
+title: Page Title
+description: Page description for SEO
+---
+```
+
+### VitePress Features
+
+- **Markdown Extensions**: Enhanced markdown with custom containers
+- **Code Highlighting**: Automatic syntax highlighting
+- **Search**: Built-in local search
+- **Navigation**: Automatic sidebar and navigation
+- **Responsive Design**: Mobile-friendly layout
+
+### Custom Containers
+
+```markdown
+::: tip
+This is a tip container
+:::
+
+::: warning
+This is a warning container
+:::
+
+::: danger
+This is a danger container
+:::
+
+::: info
+This is an info container
+:::
+```
+
+### Code Blocks
+
+````markdown
+```bash
+# Command examples
 sudo nixos-rebuild switch --flake .#nixos
-
-# Apply home-manager configuration
-home-manager switch --flake .#awfixer@nixos
 ```
 
-## 📚 Documentation Structure
-
-| Document | Description |
-|----------|-------------|
-| [Getting Started](./getting-started.md) | Complete setup guide for new users |
-| [Module System](./modules.md) | Understanding and extending the module system |
-| [Package Management](./packages.md) | Managing and organizing packages |
-| [Maintenance](./maintenance.md) | System maintenance and troubleshooting |
-| [Development](./development.md) | Development workflow and best practices |
-
-## 🏗️ Architecture Overview
-
-This configuration is built around several key concepts:
-
-### Flake-Based Structure
-- **Entry Point**: `flake.nix` defines inputs and outputs
-- **System Configurations**: Generated using custom `mkHost` helper
-- **Modular Design**: Separate modules for different functionality areas
-
-### Key Components
-
+```nix
+# Nix code examples
+{ pkgs, ... }: {
+  environment.systemPackages = with pkgs; [
+    git
+    firefox
+  ];
+}
 ```
-nixos-config/
-├── flake.nix              # Main flake configuration
-├── lib/                   # Custom library functions
-├── hosts/                 # Host-specific configurations
-├── modules/
-│   ├── nixos/            # System-level modules
-│   └── home-manager/     # User-level modules
-└── users/                # User-specific configurations
-    └── awfixer/          # Primary user configuration
-        ├── packages/     # Categorized package lists
-        └── config/       # User-specific configs
+````
+
+## 🎨 Customization
+
+### Theme Colors
+
+Edit CSS variables in `.vitepress/theme/custom.css`:
+
+```css
+:root {
+  --vp-c-brand-1: #5f67ee;
+  --vp-c-brand-2: #4e56d8;
+  --vp-c-brand-3: #3d45c2;
+}
 ```
 
-### Module Categories
+### Logo and Branding
 
-#### NixOS Modules (System-Level)
-- **Base**: Core system configuration
-- **Hardware**: CPU, GPU, audio, networking
-- **Services**: System services and daemons
-- **Virtualisation**: Docker, QEMU, containers
-- **Security**: Firewall, sudo, authentication
+- Logo: `public/nixos-logo.svg`
+- Hero image: `public/nixos-hero.svg`
+- Favicon: Automatically generated from logo
 
-#### Home Manager Modules (User-Level)
-- **Applications**: Browser, editor configurations
-- **Shell**: Bash, Zsh, Fish configurations
-- **Development**: Language-specific tools
-- **Desktop**: GUI application settings
+## 📊 Analytics
 
-## 🎯 Key Features
+Analytics can be added through:
+- Vercel Analytics (automatic on Vercel)
+- Google Analytics (add to config)
+- Custom analytics solutions
 
-### System Management
-- **Declarative Configuration**: Everything defined in code
-- **Version Control**: Full system state in Git
-- **Rollback Support**: Easy system rollbacks
-- **Reproducible Builds**: Consistent across machines
+## 🔧 Configuration
 
-### Package Organization
-- **Categorized Packages**: Organized by purpose (dev, cli, ai, etc.)
-- **Multiple Sources**: nixpkgs, NUR, custom flakes
-- **Version Pinning**: Controlled package versions
+Key configuration files:
 
-### Development Environment
-- **Integrated Tooling**: Git, GitHub CLI, development shells
-- **Editor Integration**: Neovim, Zed configurations
-- **Language Support**: Multiple programming languages
+- **`.vitepress/config.mts`**: Main VitePress configuration
+- **`package.json`**: Dependencies and scripts
+- **`vercel.json`**: Vercel deployment settings
+- **`.gitignore`**: Files to ignore in Git
 
-### Virtualization Stack
-- **Container Support**: Docker and Podman
-- **Virtual Machines**: QEMU/KVM with libvirt
-- **Android Emulation**: Waydroid support
-- **Development VMs**: MicroVM integration
+## 🐛 Troubleshooting
 
-## 🔧 Common Operations
+### Build Issues
 
-### System Updates
-```bash
-# Update flake inputs
-nix flake update
+1. Check Node.js version (18+ required)
+2. Clear cache: `rm -rf .vitepress/cache`
+3. Reinstall dependencies: `rm -rf node_modules && npm install`
 
-# Rebuild system
-sudo nixos-rebuild switch --flake .#nixos
+### Development Server Issues
 
-# Update home environment
-home-manager switch --flake .#awfixer@nixos
-```
+1. Check port availability (default 5173)
+2. Verify configuration syntax
+3. Check for syntax errors in markdown files
 
-### Package Management
-```bash
-# Add a new package to base.nix
-echo "package-name" >> users/awfixer/packages/base.nix
+### Deployment Issues
 
-# Install immediately
-home-manager switch --flake .#awfixer@nixos
-```
+1. Verify build command in deployment platform
+2. Check output directory setting
+3. Ensure all dependencies are in `package.json`
 
-### Configuration Testing
-```bash
-# Test without switching
-sudo nixos-rebuild test --flake .#nixos
+## 📚 Resources
 
-# Check flake validity
-nix flake check
-```
-
-## 🛠️ Customization
-
-### Adding New Modules
-1. Create module file in appropriate directory
-2. Add imports to relevant `default.nix`
-3. Configure options as needed
-4. Test and apply changes
-
-### Host-Specific Configuration
-1. Create new directory in `hosts/`
-2. Define hardware and host-specific settings
-3. Update `flake.nix` to include new host
-4. Build configuration for new host
-
-### User Configuration
-1. Modify files in `users/awfixer/`
-2. Add packages to appropriate category files
-3. Configure applications in `modules/home-manager/`
-
-## 📖 Learning Resources
-
-### Official Documentation
-- [NixOS Manual](https://nixos.org/manual/nixos/stable/)
-- [Nixpkgs Manual](https://nixos.org/manual/nixpkgs/stable/)
-- [Home Manager Manual](https://nix-community.github.io/home-manager/)
-- [Nix Flakes](https://nixos.wiki/wiki/Flakes)
-
-### Community Resources
-- [NixOS Wiki](https://nixos.wiki/)
-- [Nix Pills](https://nixos.org/guides/nix-pills/)
-- [Zero to Nix](https://zero-to-nix.com/)
-
-## 🤝 Contributing
-
-### Making Changes
-1. Test changes in development environment
-2. Ensure flake checks pass: `nix flake check`
-3. Document significant changes
-4. Submit pull request with clear description
-
-### Best Practices
-- Follow existing module structure
-- Add appropriate documentation
-- Test on target hardware when possible
-- Use descriptive commit messages
-
-## 📞 Support
-
-### Troubleshooting
-- Check [maintenance guide](./maintenance.md) for common issues
-- Review system logs: `journalctl -xeu nixos-rebuild`
-- Verify flake syntax: `nix flake check`
-
-### Getting Help
-- NixOS Discourse: https://discourse.nixos.org/
-- NixOS Matrix: #nixos:nixos.org
-- GitHub Issues: For configuration-specific problems
+- [VitePress Documentation](https://vitepress.dev/)
+- [Markdown Syntax](https://commonmark.org/)
+- [Vue.js Guide](https://vuejs.org/guide/) (for advanced customization)
 
 ---
 
-**Next Steps**: Read the [Getting Started Guide](./getting-started.md) for detailed setup instructions.
+Built with ❤️ using [VitePress](https://vitepress.dev/)

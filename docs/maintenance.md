@@ -1,6 +1,15 @@
-# Maintenance and Troubleshooting Guide
+---
+title: Maintenance & Troubleshooting
+description: Keep your NixOS configuration healthy and up-to-date
+---
+
+# Maintenance & Troubleshooting
 
 This guide covers regular maintenance tasks, troubleshooting common issues, and keeping your NixOS configuration healthy and up-to-date.
+
+::: warning Regular Maintenance
+Regular maintenance is crucial for a healthy NixOS system. Following the schedules in this guide will prevent most common issues.
+:::
 
 ## Regular Maintenance Tasks
 

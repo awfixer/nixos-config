@@ -1,0 +1,66 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hero-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5277C3;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#7EBAE4;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#41B883;stop-opacity:0.4" />
+    </linearGradient>
+    <linearGradient id="code-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5277C3;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#7EBAE4;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background pattern -->
+  <rect width="400" height="300" fill="url(#hero-gradient)"/>
+  
+  <!-- Code terminal representation -->
+  <g transform="translate(50, 50)">
+    <!-- Terminal window -->
+    <rect x="0" y="0" width="300" height="200" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+    
+    <!-- Title bar -->
+    <rect x="0" y="0" width="300" height="30" rx="8" fill="#2a2a2a"/>
+    <circle cx="15" cy="15" r="4" fill="#ff5f57"/>
+    <circle cx="30" cy="15" r="4" fill="#ffbd2e"/>
+    <circle cx="45" cy="15" r="4" fill="#28ca42"/>
+    
+    <!-- Code content -->
+    <g font-family="monospace" font-size="10" fill="#ffffff">
+      <!-- Nix code lines -->
+      <text x="10" y="50" fill="#7EBAE4">{ config, lib, pkgs, ... }:</text>
+      <text x="10" y="65" fill="#ffffff">{</text>
+      <text x="20" y="80" fill="#41B883">environment.systemPackages</text>
+      <text x="170" y="80" fill="#ffffff">= with pkgs; [</text>
+      <text x="30" y="95" fill="#ffbd2e">git</text>
+      <text x="30" y="110" fill="#ffbd2e">firefox</text>
+      <text x="30" y="125" fill="#ffbd2e">vim</text>
+      <text x="20" y="140" fill="#ffffff">];</text>
+      <text x="10" y="155" fill="#ffffff">}</text>
+      
+      <!-- Cursor -->
+      <rect x="25" y="160" width="8" height="12" fill="#7EBAE4" opacity="0.7"/>
+    </g>
+  </g>
+  
+  <!-- Floating NixOS logos -->
+  <g opacity="0.3">
+    <!-- Small logos scattered around -->
+    <g transform="translate(320, 80) scale(0.5)">
+      <polygon points="-6,-10 6,-10 12,0 6,10 -6,10 -12,0" fill="#5277C3"/>
+    </g>
+    <g transform="translate(30, 200) scale(0.3)">
+      <polygon points="-6,-10 6,-10 12,0 6,10 -6,10 -12,0" fill="#41B883"/>
+    </g>
+    <g transform="translate(350, 220) scale(0.4)">
+      <polygon points="-6,-10 6,-10 12,0 6,10 -6,10 -12,0" fill="#7EBAE4"/>
+    </g>
+  </g>
+  
+  <!-- Decorative elements -->
+  <g stroke="#7EBAE4" stroke-width="1" fill="none" opacity="0.2">
+    <circle cx="80" cy="80" r="20"/>
+    <circle cx="350" cy="150" r="15"/>
+    <circle cx="50" cy="250" r="10"/>
+  </g>
+</svg>

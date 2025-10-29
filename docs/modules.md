@@ -1,6 +1,15 @@
-# Module System Documentation
+---
+title: Module System
+description: Understanding and extending the modular architecture
+---
+
+# Module System
 
 This document explains the modular architecture of this NixOS configuration, how to understand existing modules, and how to create your own.
+
+::: info Module Types
+This configuration uses two types of modules: **NixOS modules** (system-level) and **Home Manager modules** (user-level). Understanding this distinction is key to working with the configuration.
+:::
 
 ## Module System Overview
 

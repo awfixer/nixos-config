@@ -1,6 +1,15 @@
-# Development Workflow and Best Practices
+---
+title: Development Workflow
+description: Contributing and extending the configuration
+---
+
+# Development Workflow
 
 This guide covers development workflows, contribution guidelines, and best practices for working with and extending this NixOS configuration.
+
+::: info Development Environment
+This configuration includes a complete development shell with all necessary tools. Run `nix develop` to enter the development environment.
+:::
 
 ## Development Environment Setup
 

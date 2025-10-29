@@ -1,6 +1,15 @@
-# Package Management Guide
+---
+title: Package Management
+description: How packages are organized, managed, and customized
+---
+
+# Package Management
 
 This guide covers how packages are organized, managed, and customized in this NixOS configuration.
+
+::: tip Package Categories
+Packages are organized into logical categories like `base`, `dev`, `cli`, `ai`, etc. This makes it easy to find and manage related software.
+:::
 
 ## Package Organization System
 

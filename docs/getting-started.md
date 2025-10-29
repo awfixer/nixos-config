@@ -1,6 +1,15 @@
-# Getting Started with AWFixer's NixOS Configuration
+---
+title: Getting Started
+description: Complete setup guide for AWFixer's NixOS configuration
+---
+
+# Getting Started
 
 This guide will walk you through setting up and using this NixOS configuration, whether you're new to NixOS or migrating from another system.
+
+::: tip Before You Begin
+Make sure you have basic familiarity with Linux command line and Git. If you're completely new to NixOS, consider reading the [official NixOS manual](https://nixos.org/manual/nixos/stable/) first.
+:::
 
 ## Prerequisites
 
