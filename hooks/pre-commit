@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Pre-commit hook for NixOS configuration repository
+# This hook runs various checks before allowing commits
+
+set -euo pipefail
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if we're in a Nix environment
+if ! command -v nix >/dev/null 2>&1; then
+    echo "❌ Nix is not available. Please run from within a Nix environment."
+    exit 1
+fi
+
+# Run Nix flake check (syntax and evaluation)
+echo "📦 Checking Nix flake syntax and evaluation..."
+if ! nix flake check --no-build; then
+    echo "❌ Nix flake check failed"
+    exit 1
+fi
+
+# Format Nix files if nixpkgs-fmt is available
+if command -v nixpkgs-fmt >/dev/null 2>&1; then
+    echo "🎨 Formatting Nix files..."
+    git diff --cached --name-only --diff-filter=ACM | grep '\.nix$' | xargs -r nixpkgs-fmt
+    # Re-add formatted files
+    git diff --cached --name-only --diff-filter=ACM | grep '\.nix$' | xargs -r git add
+fi
+
+# Lint Nix files if statix is available
+if command -v statix >/dev/null 2>&1; then
+    echo "🔬 Linting Nix files..."
+    git diff --cached --name-only --diff-filter=ACM | grep '\.nix$' | xargs -r statix check
+fi
+
+# Check for large files
+echo "📏 Checking for large files..."
+git diff --cached --name-only --diff-filter=ACM | while read -r file; do
+    if [ -f "$file" ]; then
+        size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo 0)
+        if [ "$size" -gt 1000000 ]; then  # 1MB
+            echo "❌ Large file detected: $file (${size} bytes)"
+            echo "Consider using Git LFS for large files"
+            exit 1
+        fi
+    fi
+done
+
+# Check for secrets (basic patterns)
+echo "🔐 Checking for potential secrets..."
+git diff --cached --name-only --diff-filter=ACM | while read -r file; do
+    if [ -f "$file" ]; then
+        # Check for common secret patterns
+        if grep -E "(password|secret|key|token)\s*[:=]\s*['\"][^'\"]{8,}" "$file" >/dev/null 2>&1; then
+            echo "⚠️  Potential secret found in $file - please review"
+        fi
+    fi
+done
+
+# Check documentation links in VitePress config
+if [ -f "docs/.vitepress/config.mts" ]; then
+    echo "🔗 Checking documentation links..."
+    cd docs
+    missing_files=()
+    
+    # Extract links from VitePress config (simplified approach)
+    grep -o "link: '[^']*'" .vitepress/config.mts | sed "s/link: '//g" | sed "s/'//g" | while read -r link; do
+        if [[ ! "$link" =~ ^https?:// ]] && [[ "$link" != "/" ]]; then
+            file="${link#/}.md"
+            if [ ! -f "$file" ]; then
+                echo "❌ Missing documentation file: $file"
+                exit 1
+            fi
+        fi
+    done
+    cd ..
+fi
+
+echo "✅ All pre-commit checks passed!"

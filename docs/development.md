@@ -134,11 +134,11 @@ $EDITOR CLAUDE.md                 # Update Claude instructions if needed
 {
   # Section headers for logical grouping
   # === Network Configuration ===
-  
+
   networking = {
     hostName = "nixos";           # System hostname
     enableIPv6 = true;            # Enable IPv6 support
-    
+
     # Firewall configuration
     firewall = {
       enable = true;              # Enable firewall
@@ -182,7 +182,7 @@ let
     # Subcategory comment
     package1                    # Description - https://website
     package2                    # Description - https://website
-    
+
     # Another subcategory
     package3                    # Description - https://website
   ];
@@ -219,34 +219,34 @@ with lib;
   # Optional: Define module options
   options.services.new-service = {
     enable = mkEnableOption "new service";
-    
+
     port = mkOption {
       type = types.int;
       default = 8080;
       description = "Port for the service";
     };
   };
-  
+
   # Configuration when enabled
   config = mkIf config.services.new-service.enable {
     systemd.services.new-service = {
       description = "New Service";
       wantedBy = [ "multi-user.target" ];
-      
+
       serviceConfig = {
         ExecStart = "${pkgs.package}/bin/service --port ${toString config.services.new-service.port}";
         Restart = "always";
         User = "new-service";
       };
     };
-    
+
     # Create service user
     users.users.new-service = {
       isSystemUser = true;
       group = "new-service";
     };
     users.groups.new-service = {};
-    
+
     # Open firewall if needed
     networking.firewall.allowedTCPPorts = [ config.services.new-service.port ];
   };
@@ -280,18 +280,18 @@ with lib;
 {
   programs.new-app = {
     enable = true;
-    
+
     settings = {
       theme = "dark";
       font = "JetBrains Mono";
-      
+
       # Application-specific settings
       editor = {
         tabSize = 2;
         wordWrap = true;
       };
     };
-    
+
     # Key bindings
     keybindings = [
       {
@@ -300,7 +300,7 @@ with lib;
       }
     ];
   };
-  
+
   # Additional configuration files
   xdg.configFile."new-app/config.json".source = ./config.json;
 }
@@ -365,32 +365,89 @@ nix build .#nixosConfigurations.nixos.config.system.build.vm
 sudo systemd-nspawn -D /var/lib/machines/nixos-test
 ```
 
-### Continuous Integration
+### Code Quality Automation
 
-#### Pre-commit Hooks
+#### Pre-commit Hook System
 
+This repository includes a comprehensive pre-commit hook system that automatically validates code quality on every commit.
+
+**Automated Setup**
 ```bash
-# Setup pre-commit hooks
-cat > .git/hooks/pre-commit << 'EOF'
-#!/bin/bash
-set -e
+# Enter development environment (includes pre-commit)
+nix develop
 
-echo "Running flake checks..."
-nix flake check
+# Install pre-commit hooks (one-time setup)
+pre-commit install
 
-echo "Checking formatting..."
-nix fmt
-
-echo "Validating syntax..."
-find . -name "*.nix" -exec nix-instantiate --parse {} \; > /dev/null
-
-echo "Pre-commit checks passed!"
-EOF
-
-chmod +x .git/hooks/pre-commit
+# Run pre-commit checks manually
+pre-commit run --all-files
 ```
 
-#### Automated Testing
+**Included Checks**
+- **Nix Formatting**: Automatic code formatting with `nixpkgs-fmt`
+- **Nix Linting**: Static analysis with `statix` for best practices
+- **Flake Validation**: Syntax and evaluation checking
+- **Documentation**: Link validation and structure checks
+- **Security**: Secret detection and large file prevention
+- **General**: Trailing whitespace, EOF newlines, YAML/JSON validation
+
+**Configuration**
+The pre-commit configuration is defined in `.pre-commit-config.yaml` and includes:
+
+```yaml
+repos:
+  # Nix-specific checks
+  - repo: https://github.com/nix-community/nixpkgs-fmt
+    hooks: [nixpkgs-fmt]
+  - repo: https://github.com/nerdypepper/statix
+    hooks: [statix-check]
+
+  # Security and file checks
+  - repo: https://github.com/Yelp/detect-secrets
+    hooks: [detect-secrets]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    hooks: [trailing-whitespace, end-of-file-fixer, check-large-files]
+```
+
+#### Git Hooks
+
+**Pre-commit Hook** (`.git/hooks/pre-commit`)
+- Validates Nix flake syntax and evaluation
+- Formats Nix files automatically
+- Checks for potential secrets
+- Validates documentation links
+- Prevents large file commits
+
+**Pre-push Hook** (`.git/hooks/pre-push`)
+- Runs comprehensive system builds
+- Validates NixOS configuration builds successfully
+- Checks for uncommitted changes
+- Runs security scans on commits being pushed
+- Ensures main branch is up to date
+
+#### Flake Checks
+
+The flake includes comprehensive validation through the `checks` output:
+
+```bash
+# Run all flake checks
+nix flake check
+
+# Run specific checks
+nix build .#checks.x86_64-linux.nixpkgs-fmt    # Code formatting
+nix build .#checks.x86_64-linux.statix        # Nix linting
+nix build .#checks.x86_64-linux.docs-links    # Documentation validation
+nix build .#checks.x86_64-linux.nixos-config  # System build test
+```
+
+**Available Checks**
+- **nixpkgs-fmt**: Validates Nix code formatting
+- **statix**: Lints Nix files for anti-patterns and suggestions
+- **pre-commit-check**: Runs all pre-commit hooks
+- **docs-links**: Validates documentation structure
+- **nixos-config**: Builds NixOS configuration to ensure validity
+
+#### CI/CD Integration
 
 **GitHub Actions Example**
 ```yaml
@@ -407,6 +464,8 @@ jobs:
       - uses: cachix/install-nix-action@v20
       - name: Check flake
         run: nix flake check
+      - name: Run pre-commit
+        run: nix develop --command pre-commit run --all-files
       - name: Build system
         run: nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 ```
@@ -506,6 +565,36 @@ in
 - Enhanced firewall configuration
 ```
 
+### AI-Assisted Development
+
+#### Working with Claude Code
+
+This repository is optimized for development with [Claude Code](https://claude.ai/code), Anthropic's AI development assistant. The configuration includes comprehensive context to help Claude understand the project structure and assist effectively.
+
+**Getting Started with AI Assistance**
+```bash
+# Install Claude Code CLI
+curl -fsSL https://claude.ai/install.sh | sh
+
+# Start from project root (includes CLAUDE.md context)
+cd /path/to/nixos-config
+claude
+
+# Example assistance requests
+"Help me add a new NixOS module for PostgreSQL"
+"Fix this Nix evaluation error: [paste error]"
+"Update the documentation for the new feature"
+```
+
+**AI Integration Benefits**
+- **Code Quality**: AI helps implement best practices and proper Nix patterns
+- **Documentation**: Automatic generation and maintenance of comprehensive docs
+- **Troubleshooting**: Expert assistance with complex Nix errors and configuration issues
+- **Automation**: AI-designed pre-commit hooks and quality checks
+- **Learning**: Explanations of Nix concepts and patterns
+
+**See Also**: [AI Assistance Documentation](./ai-assistance.md) for detailed information about Claude Code integration.
+
 ### Contribution Guidelines
 
 #### Pull Request Process
@@ -556,23 +645,23 @@ let
   myCustomTool = pkgs.stdenv.mkDerivation rec {
     pname = "my-tool";
     version = "1.0.0";
-    
+
     src = pkgs.fetchFromGitHub {
       owner = "username";
       repo = "my-tool";
       rev = "v${version}";
       sha256 = "sha256-...";
     };
-    
+
     nativeBuildInputs = with pkgs; [ makeWrapper ];
     buildInputs = with pkgs; [ dependency1 dependency2 ];
-    
+
     installPhase = ''
       mkdir -p $out/bin
       cp my-tool $out/bin/
       wrapProgram $out/bin/my-tool --set PATH ${lib.makeBinPath buildInputs}
     '';
-    
+
     meta = with lib; {
       description = "My custom tool";
       homepage = "https://github.com/username/my-tool";
@@ -589,7 +678,7 @@ in
 # Create package overlay
 final: prev: {
   myCustomPackage = prev.callPackage ./my-package.nix {};
-  
+
   # Override existing package
   modifiedPackage = prev.package.overrideAttrs (oldAttrs: {
     version = "custom-version";
@@ -606,7 +695,7 @@ final: prev: {
   sops = {
     defaultSopsFile = ./secrets.yaml;
     age.keyFile = "/home/awfixer/.config/sops/age/keys.txt";
-    
+
     secrets = {
       "api-key" = {
         owner = "awfixer";

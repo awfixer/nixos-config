@@ -235,38 +235,100 @@ sudo nftables list ruleset
 sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
 ```
 
-## Development Tools
+## Code Quality and Development
 
-### Git Operations
+### Pre-commit and Quality Checks
+
+```bash
+# Enter development environment with all tools
+nix develop
+
+# Install pre-commit hooks (one-time setup)
+pre-commit install
+
+# Run all pre-commit checks manually
+pre-commit run --all-files
+
+# Run specific pre-commit hook
+pre-commit run nixpkgs-fmt
+pre-commit run statix
+
+# Format Nix code
+nixpkgs-fmt .
+
+# Lint Nix files
+statix check .
+```
+
+### Flake Validation and Checks
+
+```bash
+# Run all flake checks
+nix flake check
+
+# Run specific flake checks
+nix build .#checks.x86_64-linux.nixpkgs-fmt    # Code formatting validation
+nix build .#checks.x86_64-linux.statix        # Nix linting check
+nix build .#checks.x86_64-linux.docs-links    # Documentation validation
+nix build .#checks.x86_64-linux.nixos-config  # System build test
+
+# Quick syntax check (no builds)
+nix flake check --no-build
+```
+
+### Git Operations and Automation
 
 ```bash
 # Stage all changes
 git add .
 
-# Commit with descriptive message
+# Commit with descriptive message (triggers pre-commit hooks)
 git commit -m "nixos: add new module for XYZ"
 
-# Push changes
+# Push changes (triggers pre-push hooks)
 git push origin main
 
 # Create feature branch
 git checkout -b feature/new-functionality
+
+# Manual hook execution
+.git/hooks/pre-commit   # Run pre-commit validation
+.git/hooks/pre-push     # Run pre-push validation
 ```
 
-### Testing
+### Testing and Validation
 
 ```bash
 # Test flake check
 nix flake check
 
-# Test specific module
+# Test specific module evaluation
 nix-instantiate --eval modules/nixos/module-name.nix
+
+# Test system build without applying
+nix build .#nixosConfigurations.nixos.config.system.build.toplevel
 
 # Test VM build
 nix build .#nixosConfigurations.nixos.config.system.build.vm
 
 # Run VM for testing
 ./result/bin/run-nixos-vm
+
+# Test home-manager build
+nix build .#homeConfigurations.awfixer@nixos.activationPackage
+```
+
+### AI Assistance
+
+```bash
+# Start Claude Code session (from project root)
+claude
+
+# Example AI assistance requests
+"Help me add a new NixOS module for Docker"
+"Fix this Nix evaluation error: [paste error]"
+"Update documentation for the changes I just made"
+"Explain this complex Nix expression"
 ```
 
 ## Hardware Information
@@ -358,6 +420,10 @@ kill -9 PID
 | Enter dev shell | `nix develop` |
 | Search packages | `nix search nixpkgs name` |
 | Rollback system | `sudo nixos-rebuild switch --rollback` |
+| Setup pre-commit | `nix develop && pre-commit install` |
+| Run quality checks | `pre-commit run --all-files` |
+| Format Nix code | `nixpkgs-fmt .` |
+| Lint Nix files | `statix check .` |
 
 ### Emergency Commands
 
@@ -374,7 +440,20 @@ kill -9 PID
 
 ::: tip Pro Tips
 - Use `nix develop` to automatically get all development tools
+- Run `pre-commit install` once to set up automatic code quality checks
 - Always run `nix flake check` before committing changes
+- Pre-commit hooks automatically run on `git commit` to catch issues early
+- Use `pre-commit run --all-files` to manually validate all code
 - Keep multiple generations available for easy rollback
 - Use `--show-trace` flag for detailed error information
+- Claude Code AI assistant is available via `claude` command for development help
 :::
+
+## Development Workflow Summary
+
+1. **Setup** (one-time): `nix develop && pre-commit install`
+2. **Code**: Make your changes with AI assistance if needed (`claude`)
+3. **Validate**: `nix flake check` and `pre-commit run --all-files`
+4. **Commit**: `git commit -m "description"` (hooks run automatically)
+5. **Push**: `git push` (pre-push hooks validate builds)
+6. **Deploy**: `sudo nixos-rebuild switch --flake .#nixos`

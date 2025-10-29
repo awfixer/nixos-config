@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(for file in structure installation customization troubleshooting updates backup module-development testing)",
+      "Bash(do echo -n \"$file.md: \")",
+      "Bash([ -f \"$file.md\" ])",
+      "Bash(done)",
+      "Bash(chmod:*)",
+      "Bash(nix develop:*)",
+      "Bash(nix flake check:*)",
+      "Bash(pre-commit run:*)",
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(timeout 60 nix develop:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

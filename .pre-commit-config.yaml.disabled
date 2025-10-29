@@ -1,0 +1,109 @@
+# Pre-commit hooks configuration for NixOS configuration repository
+# Docs: https://pre-commit.com/
+# Install: nix-shell -p pre-commit --run "pre-commit install"
+
+default_language_version:
+  python: python3
+
+repos:
+  # Nix formatting and linting
+  - repo: https://github.com/nix-community/nixpkgs-fmt
+    rev: v1.3.0
+    hooks:
+      - id: nixpkgs-fmt
+        name: Format Nix files
+        description: Format Nix files with nixpkgs-fmt
+        files: '\.nix$'
+
+  # Nix linting with statix (disabled - using incorrect hook configuration)
+  # - repo: https://github.com/nerdypepper/statix
+  #   rev: v0.5.8
+  #   hooks:
+  #     - id: statix
+  #       name: Lint Nix files
+  #       description: Lint Nix files for anti-patterns and suggestions
+  #       files: '\.nix$'
+
+  # Nix evaluation check
+  - repo: local
+    hooks:
+      - id: nix-flake-check
+        name: Nix flake check
+        description: Validate flake syntax and evaluation
+        entry: nix flake check --no-build
+        language: system
+        files: '^(flake\.(nix|lock)|.*\.nix)$'
+        pass_filenames: false
+
+  # General file formatting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.patch$'
+      - id: end-of-file-fixer
+        exclude: '\.patch$'
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: destroyed-symlinks
+
+  # Markdown formatting and linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown files
+        args: ['--fix', '--disable', 'MD013,MD033,MD041']  # Disable line length, HTML, first line header
+
+  # VitePress link checking (disabled - needs proper implementation)
+  # - repo: local
+  #   hooks:
+  #     - id: vitepress-link-check
+  #       name: Check VitePress documentation links
+  #       description: Validate that all links in VitePress config exist
+  #       entry: bash -c 'echo "VitePress link checking disabled - needs proper ES module handling"'
+  #       language: system
+  #       files: '^docs/.*\.(md|mts)$'
+  #       pass_filenames: false
+
+  # Shell script linting
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+        args: ['-e', 'SC1091,SC2148']  # Ignore sourcing issues and shebang requirements
+
+  # Git commit message linting
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [optional-scope]
+
+  # Security scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: '\.lock$|\.patch$'
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

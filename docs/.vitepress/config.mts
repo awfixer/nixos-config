@@ -3,27 +3,27 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "AWFixer's NixOS Configuration",
   description: "Complete documentation for a modular NixOS configuration using Nix Flakes",
-  
+
   // Base URL for deployment
   base: '/',
-  
+
   // Clean URLs
   cleanUrls: true,
-  
+
   // Theme configuration
   themeConfig: {
     // Logo
     logo: '/nixos-logo.svg',
-    
+
     // Site title in nav
     siteTitle: "AWFixer's NixOS Docs",
-    
+
     // Navigation menu
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Getting Started', link: '/getting-started' },
       { text: 'Guides', link: '/modules' },
-      { 
+      {
         text: 'Reference',
         items: [
           { text: 'Modules', link: '/modules' },
@@ -49,37 +49,31 @@ export default defineConfig({
         items: [
           { text: 'Module System', link: '/modules' },
           { text: 'Package Management', link: '/packages' },
-          { text: 'Configuration Structure', link: '/structure' }
+          { text: 'Architecture', link: '/architecture' }
         ]
       },
       {
         text: 'User Guides',
         items: [
-          { text: 'Installation', link: '/installation' },
-          { text: 'Customization', link: '/customization' },
-          { text: 'Troubleshooting', link: '/troubleshooting' }
+          { text: 'Getting Started', link: '/getting-started' },
+          { text: 'Development', link: '/development' },
+          { text: 'FAQ', link: '/faq' }
         ]
       },
       {
         text: 'Administration',
         items: [
           { text: 'Maintenance', link: '/maintenance' },
-          { text: 'Updates', link: '/updates' },
-          { text: 'Backup & Recovery', link: '/backup' }
-        ]
-      },
-      {
-        text: 'Development',
-        items: [
-          { text: 'Contributing', link: '/development' },
-          { text: 'Module Development', link: '/module-development' },
-          { text: 'Testing', link: '/testing' }
+          { text: 'Commands', link: '/commands' },
+          { text: 'Resources', link: '/resources' }
         ]
       },
       {
         text: 'Reference',
         items: [
           { text: 'Command Reference', link: '/commands' },
+          { text: 'AI Assistance', link: '/ai-assistance' },
+          { text: 'Changelog', link: '/CHANGELOG' },
           { text: 'FAQ', link: '/faq' },
           { text: 'Resources', link: '/resources' }
         ]
@@ -153,10 +147,10 @@ export default defineConfig({
       light: 'github-light',
       dark: 'github-dark'
     },
-    
+
     // Line numbers in code blocks
     lineNumbers: true,
-    
+
     // Code copy button
     code: {
       copyButtonTitle: 'Copy to clipboard',
