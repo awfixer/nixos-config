@@ -1,37 +1,16 @@
+# Virtualization and Container Configuration
+# Complete virtualization stack including containers, VMs, and mobile emulation
+# NixOS virtualization: https://nixos.wiki/wiki/Virtualization
+# Container guide: https://nixos.wiki/wiki/Docker
 { ... }:
 {
-  programs = {
-    adb = {
-      enable = true;
-    };
-    virt-manager = {
-      enable = true;
-    };
-  };
-  services.qemuGuest = {
-    enable = true;
-  };
-  virtualisation = {
-    libvirtd = {
-      enable = true;
-      onBoot = "start";
-    };
-    waydroid = {
-      enable = true;
-    };
-    docker = {
-      enable = true;
-      autoPrune = {
-        enable = true;
-        dates = "daily";
-      };
-    };
-    podman = {
-      enable = true;
-      autoPrune = {
-        enable = true;
-        dates = "daily";
-      };
-    };
-  };
+  imports = [
+    ./adb.nix
+    ./docker.nix
+    ./libvirt.nix
+    #./podman.nix
+    ./qemu.nix
+    ./virt-manager.nix
+    ./waydroid.nix
+  ];
 }
