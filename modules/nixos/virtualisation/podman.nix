@@ -1,12 +1,21 @@
+# Podman Container Runtime Configuration
+#
+# Configures Podman as an alternative container runtime to Docker.
+# Podman is daemonless and provides rootless container management.
+# Includes automatic cleanup of unused containers and images.
+#
+# Reference: https://podman.io/
+
 { ... }:
 
 {
-# Podman container platform (Docker alternative)
+  virtualisation = {
     podman = {
-      enable = true;              # Enable Podman - https://podman.io/
+      enable = true;            # Enable Podman container runtime
       autoPrune = {
-        enable = true;            # Automatically clean up unused containers/images
-        dates = "daily";          # Run cleanup daily
+        enable = true;          # Automatically clean up unused containers/images
+        dates = "daily";        # Run cleanup daily
       };
     };
+  };
 }
