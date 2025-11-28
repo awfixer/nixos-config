@@ -1,0 +1,139 @@
+{ pkgs, ... }:
+
+let
+  lock-false = {
+    Value = false;
+    Status = "locked";
+  };
+  lock-true = {
+    Value = true;
+    Status = "locked";
+  };
+in
+{
+  programs = {
+    firefox = {
+      enable = true;
+      package = pkgs.firefox.override {
+        cfg = {
+          enableGnomeExtensions = true;
+        };
+      };
+      languagePacks = [ "en-US" ];
+    };
+
+      policies = {
+        DisableTelemetry = true;
+        DisableFirefoxStudies = true;
+        EnableTrackingProtection = {
+          Value = true;
+          Locked = true;
+          Cryptomining = true;
+          Fingerprinting = true;
+        };
+        DisablePocket = true;
+        DisableFirefoxAccounts = true;
+        DisableAccounts = true;
+        DisableFirefoxScreenshots = true;
+        OverrideFirstRunPage = "";
+        OverridePostUpdatePage = "";
+        DontCheckDefaultBrowser = true;
+        DisplayBookmarksToolbar = "never";
+        DisplayMenuBar = "never";
+        SearchBar = "unified";
+
+        betterfox = {
+          enable = true;
+
+          profiles.example-profile = {
+            # Set this to enable all sections by default
+            enableAllSections = true;
+
+            settings = {
+              # To enable/disable specific sections
+              fastfox.enable = true;
+
+              # To enable/disable specific subsections
+              peskyfox = {
+                enable = true;
+                mozilla-ui.enable = false;
+              };
+
+              # To enable/disable specific options
+              securefox = {
+                enable = true;
+                tracking-protection."browser.download.start_downloads_in_tmp_dir".value = true;
+              };
+            };
+          };
+
+          version = "144.0.2"; # Set version here, defaults to main branch
+        };
+
+        ExtensionSettings = {
+          "*".installation_mode = "blocked";
+          "{uBlock0@raymondhill.net}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
+            installation_mode = "force_installed";
+          };
+          "{jid1-MnnxcxisBPnSXQ@jetpack}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/privacy-badger17/latest.xpi";
+            installation_mode = "force_installed";
+          };
+          "{d634138d-c276-4fc8-924b-40a0ea21d284}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/1password-x-password-manager/latest.xpi";
+            installation_mode = "force_installed";
+          };
+          "{6c00218c-707a-4977-84cf-36df1cef310f}" = {
+            install_url = "http://addons.mozilla.org/firefox/downloads/file/4481055/port_authority-2.2.0.xpi";
+            installation_mode = "force_installed";
+          };
+          "{addon@darkreader.org}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4525516/darkreader-4.9.110.xpi";
+            installation_mode = "force_installed";
+          };
+          "{CanvasBlocker@kkapsner.de}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4262820/canvasblocker-1.11.xpi";
+            installation_mode = "force_installed";
+          };
+          "{firefox@tampermonkey.net}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4578764/tampermonkey-5.4.0.xpi";
+            installation_mode = "force_installed";
+          };
+          "{d1b33d6a57c463f0daef4abfb625edddd1c2d5d9@mergify.com}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4571024/mergify-1.0.30.xpi";
+            installation_mode = "force_installed";
+          };
+          "{bbda042b-c350-4e85-8d81-bda0d6fbda81}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4501255/github_web_ide-2.0.11.xpi";
+            installation_mode = "force_installed";
+          };
+          "{6f54ad3f-042f-408f-8f06-ab631fe1a64f}" = {
+            install_url = "https://addons.mozilla.org/firefox/downloads/file/4525473/justdeleteme-1.6.0.xpi";
+            installation_mode = "force_installed";
+          };
+        };
+
+        Preferences = {
+          "browser.contentblocking.category" = { Value = "strict"; Status = "locked"; };
+          "extensions.pocket.enabled" = lock-false;
+          "extensions.screenshots.disabled" = lock-true;
+          "browser.topsites.contile.enabled" = lock-false;
+          "browser.formfill.enable" = lock-false;
+          "browser.search.suggest.enabled" = lock-false;
+          "browser.search.suggest.enabled.private" = lock-false;
+          "browser.urlbar.suggest.searches" = lock-false;
+          "browser.urlbar.showSearchSuggestionsFirst" = lock-false;
+          "browser.newtabpage.activity-stream.feeds.section.topstories" = lock-false;
+          "browser.newtabpage.activity-stream.feeds.snippets" = lock-false;
+          "browser.newtabpage.activity-stream.section.highlights.includePocket" = lock-false;
+          "browser.newtabpage.activity-stream.section.highlights.includeBookmarks" = lock-false;
+          "browser.newtabpage.activity-stream.section.highlights.includeDownloads" = lock-false;
+          "browser.newtabpage.activity-stream.section.highlights.includeVisited" = lock-false;
+          "browser.newtabpage.activity-stream.showSponsored" = lock-false;
+          "browser.newtabpage.activity-stream.system.showSponsored" = lock-false;
+          "browser.newtabpage.activity-stream.showSponsoredTopSites" = lock-false;
+        };
+      };
+    };
+}

@@ -1,0 +1,11 @@
+*.log*
+.direnv/
+result
+.env
+flake.lock
+devbox.lock
+pnpm-lock.yaml
+pnpm-workspace.yaml
+package-lock.json
+.env*
+.devbox/
