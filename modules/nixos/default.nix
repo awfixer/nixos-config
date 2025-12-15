@@ -5,7 +5,7 @@
     ./base
     ./chromium
     ./environment
-    ./firefox
+    #./firefox
     ./flatpak
     ./fonts
     ./gnome

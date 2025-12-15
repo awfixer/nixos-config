@@ -4,6 +4,7 @@
     enable = true;
     libraries = with pkgs; [
       arrpc
+      alsa-lib
     ];
   };
 }

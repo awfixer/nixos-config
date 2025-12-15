@@ -2,10 +2,10 @@
 {
   imports = [
     #./claude
-    ./direnv
+    #./direnv
     ./fzf
     ./git
-    ./lazygit
+    #./lazygit
     ./lsd
     ./man
     #./neovim

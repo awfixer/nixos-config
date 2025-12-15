@@ -16,5 +16,5 @@
     LC_TIME = "en_US.UTF-8";
   };
   console.keyMap = "us";
-  services.xserver.layout = "us";
+  services.xserver.xkb.layout = "us";
 }

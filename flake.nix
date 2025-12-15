@@ -1,13 +1,13 @@
 {
   inputs = {
-    stylix.url = "github:danth/stylix";
-    treefmt-nix.url = "github:numtide/treefmt-nix";
-    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+    #stylix.url = "github:danth/stylix";
+    #treefmt-nix.url = "github:numtide/treefmt-nix";
+    #chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
-    nixos-unified.url = "github:srid/nixos-unified";
-    nixpkgs.url = "nixpkgs/nixos-25.05";
+    #nixos-unified.url = "github:srid/nixos-unified";
+    nixpkgs.url = "nixpkgs/nixos-25.11";
     determinate.url = "github:Determinatesystems/determinate/";
     nixcord.url = "github:kaylorben/nixcord";
     betterfox.url = "github:HeitorAugustoLN/betterfox-nix";
@@ -19,10 +19,10 @@
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    microvm = {
-      url = "github:astro/microvm.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    #microvm = {
+    #  url = "github:astro/microvm.nix";
+    #  inputs.nixpkgs.follows = "nixpkgs";
+    #};
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -34,10 +34,10 @@
     any-nix-shell = {
       url = "github:TheMaxMur/any-nix-shell";
     };
-    nvf = {
-      url = "github:notashelf/nvf";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    #nvf = {
+    #  url = "github:notashelf/nvf";
+    #  inputs.nixpkgs.follows = "nixpkgs";
+    #};
   };
   outputs = { ... }@inputs:
     let

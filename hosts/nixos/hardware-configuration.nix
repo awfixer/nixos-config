@@ -5,8 +5,7 @@
 
 {
   imports =
-    [
-      (modulesPath + "/hardware/network/broadcom-43xx.nix")
+    [ (modulesPath + "/hardware/network/broadcom-43xx.nix")
       (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
@@ -16,27 +15,17 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    {
-      device = "/dev/disk/by-uuid/07113103-f36b-40e1-b01d-92dbeecf16e0";
+    { device = "/dev/disk/by-uuid/43b91558-618d-4821-bb13-a16ce8a2f38c";
       fsType = "ext4";
     };
 
   fileSystems."/boot" =
-    {
-      device = "/dev/disk/by-uuid/E885-539B";
+    { device = "/dev/disk/by-uuid/9566-4D09";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];
     };
 
-  swapDevices =
-    [{ device = "/dev/disk/by-uuid/cb030267-2208-4fe8-bc18-28aee719249a"; }];
-
-  # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
-  # (the default) this is the recommended approach. When using systemd-networkd it's
-  # still possible to use this option, but it's recommended to use it in conjunction
-  # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
-  networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp2s0.useDHCP = lib.mkDefault true;
+  swapDevices = [ ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

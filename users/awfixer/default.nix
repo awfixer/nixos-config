@@ -1,6 +1,7 @@
 { pkgs
 , config
 , inputs
+, lib
 , ...
 }:
 
@@ -13,12 +14,7 @@
     extraGroups = [
       "wheel"
       "fuse"
-      "docker"
-      "podman"
-      "qemu-libvirtd"
-      "kvm"
       "input"
-      "libvirtd"
       "flatpak"
       "networkmanager"
     ];
@@ -31,6 +27,7 @@
     home.stateVersion = config.home-manager.users.awfixer.home.stateVersion;
     programs.home-manager.enable = true;
   };
+  home-manager.backupFileExtension = lib.mkForce "bak";
   home-manager.users.awfixer = rec {
     imports = [
       inputs.nixcord.homeModules.nixcord

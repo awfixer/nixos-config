@@ -9,6 +9,7 @@ let
     ghostty
     zed-editor
     obsidian
+    uv
   ];
 in
 

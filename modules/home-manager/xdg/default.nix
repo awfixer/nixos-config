@@ -5,7 +5,7 @@
 with lib;
 let
   defaultApplications = {
-    browser = "firefox.desktop";
+    browser = "chromium.desktop";
     videoPlayer = "clapper.desktop";
     textEditor = "zeditor.desktop";
     fileManager = "nautilus.desktop";
