@@ -18,6 +18,7 @@ let
     { name = "dps"; value = "docker ps -a"; }
     { name = "dl"; value = "docker logs"; }
     { name = "ld"; value = "lazydocker"; }
+    { name = "tea"; value = "./go/bin/tea"; }
   ];
 in
 builtins.listToAttrs (map (a: { name = a.name; value = a.value; }) aliasList)

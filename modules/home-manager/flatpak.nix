@@ -11,6 +11,7 @@
     packages = [
       "com.fastmail.Fastmail"
       "io.github.brunofin.Cohesion"
+      "com.github.unrud.VideoDownloader"
     ];
     overrides.global = {
       Context.sockets = [ "wayland" "x11" ];

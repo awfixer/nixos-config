@@ -5,7 +5,7 @@
 
 let
   base = with pkgs; [
-    discord
+    rtorrent
     ghostty
     zed-editor
     obsidian

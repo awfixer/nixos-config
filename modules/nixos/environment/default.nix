@@ -2,6 +2,7 @@
 {
   environment = {
     systemPackages = with pkgs; [
+      vesktop
       nextdns
       (chromium.override { enableWideVine = true; })
       llvm

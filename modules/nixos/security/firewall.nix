@@ -4,6 +4,7 @@
   networking.firewall = {
     enable = true;allowedTCPPorts = [
       3000
+      5173
       1234
       4321
       8080
@@ -47,7 +48,7 @@
       1751
       1752
       1753
-      1754
+      1754 
       1755
       1756
       1757
@@ -61,6 +62,7 @@
     ];
     allowedUDPPorts = [
       3000
+      5173
       1234
       4321
       8080

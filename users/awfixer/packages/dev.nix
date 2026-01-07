@@ -2,6 +2,14 @@
 
 let
   dev = with pkgs; [
+    code-cursor
+    vscode
+    windsurf
+    kiro
+    antigravity
+    gemini-cli
+    claude-code
+    codex
     asdf-vm
     mise
     go
@@ -17,6 +25,7 @@ let
     zed-editor
     ghostty
     vlang
+    deno
   ];
 in
 
