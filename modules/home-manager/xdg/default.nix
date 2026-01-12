@@ -1,13 +1,13 @@
-{ lib
-, pkgs
-, ...
+{
+  lib,
+  ...
 }:
 with lib;
 let
   defaultApplications = {
     browser = "chromium.desktop";
-    videoPlayer = "clapper.desktop";
     textEditor = "zeditor.desktop";
+    videoPlayer = "clapper.desktop";
     fileManager = "nautilus.desktop";
   };
 in
@@ -21,7 +21,7 @@ in
       let
         browserMimeTypes = (
           [ "text/html" ]
-          ++ lib.lists.forEach [ "http" "https" "about" "unknown" ] (x: "x-scheme-handler/" + x)  # URL schemes
+          ++ lib.lists.forEach [ "http" "https" "about" "unknown" ] (x: "x-scheme-handler/" + x) # URL schemes
         );
         videoMimeTypes = [
           "video/x-matroska"

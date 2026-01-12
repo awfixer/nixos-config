@@ -3,8 +3,7 @@
   imports = [
     ./keyring.nix
   ];
-  services.xserver = {
-    enable = true;
+  services = {
     displayManager.gdm = {
       enable = true;
       autoSuspend = false;
@@ -27,24 +26,27 @@
     gnomeExtensions.docker
     gnomeExtensions.quick-settings-tweaker
   ];
-  environment.gnome.excludePackages = (with pkgs; [
-    gnome-clocks
-    gnome-calendar
-    gnome-maps
-    gnome-photos
-    gnome-contacts
-    cheese
-    gnome-music
-    gedit
-    epiphany
-    geary
-    tali
-    iagno
-    hitori
-    atomix
-    gnome-characters
-    gnome-tour
-    gnome-initial-setup
-    yelp
-  ]);
+  environment.gnome.excludePackages = (
+    with pkgs;
+    [
+      gnome-clocks
+      gnome-calendar
+      gnome-maps
+      gnome-photos
+      gnome-contacts
+      cheese
+      gnome-music
+      gedit
+      epiphany
+      geary
+      tali
+      iagno
+      hitori
+      atomix
+      gnome-characters
+      gnome-tour
+      gnome-initial-setup
+      yelp
+    ]
+  );
 }

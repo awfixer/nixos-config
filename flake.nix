@@ -1,28 +1,14 @@
 {
   inputs = {
-    #stylix.url = "github:danth/stylix";
-    #treefmt-nix.url = "github:numtide/treefmt-nix";
-    #chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
     #nixos-unified.url = "github:srid/nixos-unified";
-    nixpkgs.url = "nixpkgs/nixos-25.11";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
     determinate.url = "github:Determinatesystems/determinate/";
-    nixcord.url = "github:kaylorben/nixcord";
-    betterfox.url = "github:HeitorAugustoLN/betterfox-nix";
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nur = {
-      url = "github:nix-community/NUR";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    #microvm = {
-    #  url = "github:astro/microvm.nix";
-    #  inputs.nixpkgs.follows = "nixpkgs";
-    #};
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -34,12 +20,9 @@
     any-nix-shell = {
       url = "github:TheMaxMur/any-nix-shell";
     };
-    #nvf = {
-    #  url = "github:notashelf/nvf";
-    #  inputs.nixpkgs.follows = "nixpkgs";
-    #};
   };
-  outputs = { ... }@inputs:
+  outputs =
+    { ... }@inputs:
     let
       systems = [
         "x86_64-linux"
@@ -51,7 +34,8 @@
     in
     {
       nixosConfigurations = lib.mkHosts [ "nixos" ] "x86_64-linux" inputs;
-      checks = lib.genAttrs systems (system:
+      checks = lib.genAttrs systems (
+        system:
         let
           pkgs = pkgsFor system;
         in
@@ -64,13 +48,15 @@
             statix check ${./.}
             touch $out
           '';
-          pre-commit-check = pkgs.runCommand "check-pre-commit" { nativeBuildInputs = [ pkgs.pre-commit ]; } ''
-            cp -r ${./.} ./repo
-            chmod -R +w ./repo
-            cd ./repo
-            pre-commit run --all-files
-            touch $out
-          '';
+          pre-commit-check =
+            pkgs.runCommand "check-pre-commit" { nativeBuildInputs = [ pkgs.pre-commit ]; }
+              ''
+                cp -r ${./.} ./repo
+                chmod -R +w ./repo
+                cd ./repo
+                pre-commit run --all-files
+                touch $out
+              '';
           docs-links = pkgs.runCommand "check-docs-links" { } ''
             if [ -f "${./.}/docs/index.md" ]; then
               echo "Documentation structure validated"
@@ -80,6 +66,7 @@
             fi
             touch $out
           '';
-        });
+        }
+      );
     };
 }

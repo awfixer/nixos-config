@@ -3,9 +3,7 @@
 let
   js = with pkgs; [
     bun
-    pnpm
-    nodejs
-    yarn
+    deno
   ];
 in
 

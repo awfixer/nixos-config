@@ -20,13 +20,11 @@ in
   # sorts a list of attribute sets by comparing a field in each of the attrsets, with a user-defined order
   sortAttrsList =
     path: list: order:
-    builtins.sort
-      (
-        a: b:
-        (lib.indexOf (lib.attrsets.getAttrFromPath path a) order)
-        < (lib.indexOf (lib.attrsets.getAttrFromPath path b) order)
-      )
-      list;
+    builtins.sort (
+      a: b:
+      (lib.indexOf (lib.attrsets.getAttrFromPath path a) order)
+      < (lib.indexOf (lib.attrsets.getAttrFromPath path b) order)
+    ) list;
 
   boolToString = bool: if bool == true then "true" else "false";
 
@@ -41,88 +39,87 @@ in
     );
 
   mkHost =
-    { inputs
-    , hostName
-    , system ? "x86_64-linux"
-    ,
+    {
+      inputs,
+      hostName,
+      system ? "x86_64-linux",
     }:
-      with inputs;
-      with builtins;
-      lib.nixosSystem {
-        inherit system lib;
-        specialArgs = { inherit inputs system; };
+    with inputs;
+    with builtins;
+    lib.nixosSystem {
+      inherit system lib;
+      specialArgs = { inherit inputs system; };
 
-        modules = [
-          disko.nixosModules.disko
-          nur.modules.nixos.default
+      modules = [
+        disko.nixosModules.disko
 
-          (
-            { modulesPath
-            , config
-            , pkgs
-            , ...
-            }:
-            {
-              imports = [
-                (modulesPath + "/installer/scan/not-detected.nix")
-                (modulesPath + "/profiles/qemu-guest.nix")
-                ../hosts/${hostName}
-                ../users
-                ../modules/nixos
-              ];
+        (
+          {
+            modulesPath,
+            pkgs,
+            ...
+          }:
+          {
+            imports = [
+              (modulesPath + "/installer/scan/not-detected.nix")
+              (modulesPath + "/profiles/qemu-guest.nix")
+              ../hosts/${hostName}
+              ../users
+              ../modules/nixos
+            ];
 
-              config = {
-                boot.kernelPackages = pkgs.linuxPackages_latest;
-                system.stateVersion = stateVersion;
-                documentation.man.generateCaches = true;
-                powerManagement.enable = true;
+            config = {
+              boot.kernelPackages = pkgs.linuxPackages_latest;
+              system.stateVersion = stateVersion;
+              documentation.man.generateCaches = true;
+              powerManagement.enable = true;
 
-                environment = {
-                  pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
-                };
+              environment = {
+                pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
+              };
 
-                networking = {
-                  inherit hostName;
-                  # iproute2.enable = true;
-                  enableIPv6 = true;
-                  dhcpcd.enable = true;
-                };
+              networking = {
+                inherit hostName;
+                # iproute2.enable = true;
+                enableIPv6 = true;
+                dhcpcd.enable = true;
+              };
 
-                boot.loader.systemd-boot = {
+              boot.loader.systemd-boot = {
+                enable = true;
+              };
+
+              services = {
+                upower.enable = true;
+                # Enable CUPS to print documents.
+                printing = {
                   enable = true;
+                  browsing = true;
+                  browsedConf = ''
+                    BrowseDNSSDSubTypes _cups,_print
+                    BrowseLocalProtocols all
+                    BrowseRemoteProtocols all
+                    CreateIPPPrinterQueues All
+                    BrowseProtocols all
+                  '';
                 };
-
-                services = {
-                  upower.enable = true;
-                  # Enable CUPS to print documents.
-                  printing = {
-                    enable = true;
-                    browsing = true;
-                    browsedConf = ''
-                      BrowseDNSSDSubTypes _cups,_print
-                      BrowseLocalProtocols all
-                      BrowseRemoteProtocols all
-                      CreateIPPPrinterQueues All
-                      BrowseProtocols all
-                    '';
-                  };
-                  avahi = {
-                    enable = true;
-                    nssmdns4 = true;
-                    openFirewall = true;
-                  };
+                avahi = {
+                  enable = true;
+                  nssmdns4 = true;
+                  openFirewall = true;
                 };
               };
-            }
-          )
-
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "backup";
-            home-manager.extraSpecialArgs = { inherit inputs; };
+            };
           }
-        ];
-      };
+        )
+
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
+          home-manager.extraSpecialArgs = { inherit inputs; };
+        }
+      ];
+    };
 }

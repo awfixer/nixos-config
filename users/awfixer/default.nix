@@ -1,8 +1,9 @@
-{ pkgs
-, config
-, inputs
-, lib
-, ...
+{
+  pkgs,
+  config,
+  inputs,
+  lib,
+  ...
 }:
 
 {
@@ -18,8 +19,18 @@
       "flatpak"
       "networkmanager"
     ];
-    subGidRanges = [{ count = 65536; startGid = 1000; }];
-    subUidRanges = [{ count = 65536; startUid = 1000; }];
+    subGidRanges = [
+      {
+        count = 65536;
+        startGid = 1000;
+      }
+    ];
+    subUidRanges = [
+      {
+        count = 65536;
+        startUid = 1000;
+      }
+    ];
     shell = pkgs.zsh;
   };
   home-manager.users.root = {
@@ -30,13 +41,13 @@
   home-manager.backupFileExtension = lib.mkForce "bak";
   home-manager.users.awfixer = rec {
     imports = [
-      inputs.nixcord.homeModules.nixcord
       inputs.nix-flatpak.homeManagerModules.nix-flatpak
       ../../modules/home-manager
       ./gc.nix
       ./packages
     ];
     home = {
+      enableNixpkgsReleaseCheck = false;
       homeDirectory = "/home/${home.username}";
       stateVersion = "25.05";
     };

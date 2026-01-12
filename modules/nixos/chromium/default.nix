@@ -3,7 +3,6 @@
 {
   programs.chromium = {
     enable = true;
-    homepageLocation = "https://www.startpage.com/";
     extensions = [
       "aeblfdkhhhdcdjpifhhbdiojplfjncoa"
       "adjiklnjodbiaioggfpbpkhbfcnhgkfe"

@@ -7,9 +7,6 @@ let
   base = with pkgs; [
     rtorrent
     ghostty
-    zed-editor
-    obsidian
-    uv
   ];
 in
 

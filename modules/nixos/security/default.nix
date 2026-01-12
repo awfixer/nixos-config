@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./dns.nix
+    #./dns.nix
     ./firewall.nix
     #./firejail.nix
     ./mullvad.nix
