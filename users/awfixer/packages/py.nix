@@ -2,6 +2,7 @@
 
 let
   python = with pkgs; [
+    poetry
     pyenv
     uv-sort
     uv

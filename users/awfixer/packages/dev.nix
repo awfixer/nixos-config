@@ -13,7 +13,6 @@ let
     devbox
     zed-editor
     ghostty
-    uv
     gcc
   ];
 in

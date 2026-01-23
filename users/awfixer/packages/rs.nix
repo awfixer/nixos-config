@@ -2,8 +2,10 @@
 
 let
   rust = with pkgs; [
+    rust
     rustc
     cargo
+    rustup
     rust-script
     rust-analyzer
     rust-motd

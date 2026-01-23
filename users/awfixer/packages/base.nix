@@ -1,16 +1,17 @@
-# Base Desktop Applications
-# Essential applications for daily desktop use
-# Package search: https://search.nixos.org/packages
 { pkgs, ... }:
 
 let
   base = with pkgs; [
     rtorrent
+    firefox
     ghostty
+    proton-pass
+    protonvpn-gui
+    protonmail-desktop
+    proton-authenticator
   ];
 in
 
 {
-  # Install all base packages to user environment
   home.packages = builtins.concatLists [ base ];
 }

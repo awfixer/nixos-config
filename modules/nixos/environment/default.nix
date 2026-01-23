@@ -2,13 +2,9 @@
 {
   environment = {
     systemPackages = with pkgs; [
+      filen-desktop
       brave
       vesktop
-      gh
-      glab
-      ghunt
-      git-repo
-      reposurgeon
       cachix
       autorandr
       killall
