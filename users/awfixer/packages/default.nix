@@ -8,8 +8,10 @@
     ./git.nix
     ./hack.nix
     ./js.nix
-    ./money.nix
+    #./money.nix
+    #./music.nix
     ./nix.nix
+    #./phantomos.nix
     ./py.nix
     ./rs.nix
   ];

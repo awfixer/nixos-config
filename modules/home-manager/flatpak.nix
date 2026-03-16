@@ -1,3 +1,5 @@
+# flatpak and appimage work, I consider them the same they are both userspace files not fully managed by nix.
+
 { ... }:
 
 {
@@ -12,8 +14,8 @@
       }
     ];
     packages = [
-      "com.fastmail.Fastmail"
       "com.github.unrud.VideoDownloader"
+      "io.github.prateekmedia.appimagepool"
     ];
     overrides.global = {
       Context.sockets = [

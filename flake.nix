@@ -2,11 +2,20 @@
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
+    claude-desktop.url = "github:k3d3/claude-desktop-linux-flake";
     #nixos-unified.url = "github:srid/nixos-unified";
     nixpkgs.url = "nixpkgs/nixos-unstable";
     determinate.url = "github:Determinatesystems/determinate/";
     sops-nix = {
       url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-index = {
+      url = "github:nix-community/nix-index";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {

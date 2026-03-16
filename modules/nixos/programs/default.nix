@@ -8,7 +8,6 @@
   programs = {
     bat.enable = true;
     htop.enable = true;
-    neovim.enable = true;
     vim.enable = true;
     nano.enable = false;
     usbtop.enable = true;

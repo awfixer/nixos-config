@@ -1,7 +1,7 @@
 { pkgs, ... }:
 let
   hack = with pkgs; [
-    ghorg
+    binwalk
     ghost
     wireshark-cli
     netcat

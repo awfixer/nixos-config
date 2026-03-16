@@ -57,7 +57,7 @@ with lib;
     # Additional Git configuration
     extraConfig = {
       merge.conflictstyle = "diff3"; # Show original content in merge conflicts
-      core.editor = "nvim"; # Use Neovim as the default editor
+      core.editor = "vim"; # Use Neovim as the default editor
       init.defaultBranch = "main"; # Use 'main' as default branch name
 
       # GPG/SSH signing configuration

@@ -2,6 +2,7 @@
 
 let
   git = with pkgs; [
+    ghorg
     gh
     glab
     ghunt

@@ -2,13 +2,11 @@
 
 let
   base = with pkgs; [
-    rtorrent
-    firefox
+    fuse
+    signal-desktop
+    qbittorrent-enhanced
+    obsidian
     ghostty
-    proton-pass
-    protonvpn-gui
-    protonmail-desktop
-    proton-authenticator
   ];
 in
 

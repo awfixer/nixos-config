@@ -2,7 +2,7 @@ let
   aliasList = [
     { name = "g"; value = "git"; }
     { name = "clean"; value = "sudo nix-collect-garbage -d"; }
-    { name = "flake"; value = "clean && source .env && sudo nixos-rebuild switch --flake . --impure --verbose --upgrade"; }
+    { name = "flake"; value = "clean && sudo nixos-rebuild switch --flake . --impure --verbose --upgrade"; }
     { name = "ll"; value = "ls -lha"; }
     { name = "cp"; value = "cp -r"; }
     { name = "dinit"; value = "devbox init"; }
@@ -18,7 +18,6 @@ let
     { name = "dps"; value = "docker ps -a"; }
     { name = "dl"; value = "docker logs"; }
     { name = "ld"; value = "lazydocker"; }
-    { name = "tea"; value = "./go/bin/tea"; }
   ];
 in
 builtins.listToAttrs (map (a: { name = a.name; value = a.value; }) aliasList)

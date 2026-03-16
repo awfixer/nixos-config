@@ -2,10 +2,10 @@
 
 let
   js = with pkgs; [
+    prisma
+    prisma-language-server
+    prisma-engines
     bun
-    pnpm-shell-completion
-    pnpm
-    nodejs_latest
     deno
   ];
 in

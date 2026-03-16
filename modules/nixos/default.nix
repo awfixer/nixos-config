@@ -7,7 +7,7 @@
     ./environment
     #./firefox
     ./flatpak
-    ./fonts
+    #./fonts
     ./gnome
     ./hardware
     ./nix

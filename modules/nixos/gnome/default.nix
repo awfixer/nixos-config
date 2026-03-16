@@ -14,21 +14,20 @@
     };
   };
   environment.systemPackages = with pkgs; [
-    gnome-tweaks
-    gnome-extension-manager
+    #gnome-tweaks
+    #gnome-extension-manager
     gnomeExtensions.arcmenu
     gnomeExtensions.caffeine
     gnomeExtensions.just-perfection
     gnomeExtensions.dash2dock-lite
     gnomeExtensions.appindicator
     gnomeExtensions.gsconnect
-    gnomeExtensions.tailscale-qs
-    gnomeExtensions.docker
     gnomeExtensions.quick-settings-tweaker
   ];
   environment.gnome.excludePackages = (
     with pkgs;
     [
+      showtime
       gnome-clocks
       gnome-calendar
       gnome-maps
@@ -38,6 +37,7 @@
       gnome-music
       gedit
       epiphany
+      decibels
       geary
       tali
       iagno

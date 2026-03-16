@@ -2,7 +2,8 @@
 
 let
   cli = with pkgs; [
-    graphite-cli
+    kaggle
+    #graphite-cli
     just
     watchexec
     eza

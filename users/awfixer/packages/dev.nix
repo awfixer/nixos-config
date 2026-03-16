@@ -2,6 +2,15 @@
 
 let
   dev = with pkgs; [
+    cmake
+    flutter
+    gcc
+    protobuf
+    maven
+    gradle
+    kotlin-native
+    kotlin
+    kotlin-language-server
     asdf-vm
     mise
     go
@@ -13,7 +22,6 @@ let
     devbox
     zed-editor
     ghostty
-    gcc
   ];
 in
 

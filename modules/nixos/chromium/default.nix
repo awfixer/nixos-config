@@ -3,14 +3,21 @@
 {
   programs.chromium = {
     enable = true;
+    extraOpts = {
+          DnsOverHttpsMode = "secure";
+          DnsOverHttpsTemplates = "https://dns.nextdns.io/cf3f3e";
+          BuiltInDnsClientEnabled = false;
+          DnsOverHttpsFallbackToSystem = false;
+        };
     extensions = [
+      "ihcppnlmkfeclmehgdhjkglkbmiemnmp"
+      "cnjifjpddelmedmihgijeibhnjfabmlf"
       "aeblfdkhhhdcdjpifhhbdiojplfjncoa"
       "adjiklnjodbiaioggfpbpkhbfcnhgkfe"
       "fllaojicojecljbmefodhfapmkghcbnh"
       "dcplinogpijcknhlmnlhnogocpfbohfi"
       "dlhckcablohllindinahbbpnfgblimoe"
       "bamhebecdlhhkedgncapjoofbohgiogc"
-      "bmpdohjidgjaclepflcjaijlihpdihim"
       "mendokngpagmkejfpmeellpppjgbpdaj"
       "cdglnehniifkbagbbombnjghhcihifij"
       "dpaefegpjhgeplnkomgbcmmlffkijbgp"
@@ -22,7 +29,6 @@
       "fcoeoabgfenejglbffodgkkbkcdhcgfn"
       "lahhiofdgnbcgmemekkmjnpifojdaelb"
       "icgdjligmnkgafcejnjbdjgpeajefaom"
-      "oppdbdefikkkihgbliidckokhgcmmiga"
       "fcalilbnpkfikdppppppchmkdipibalb"
     ];
   };
