@@ -5,6 +5,9 @@
   ];
   services = {
     displayManager.gdm = {
+      settings = {
+
+      };
       enable = true;
       autoSuspend = false;
       wayland = true;
@@ -14,8 +17,8 @@
     };
   };
   environment.systemPackages = with pkgs; [
-    #gnome-tweaks
-    #gnome-extension-manager
+    gnome-tweaks
+    gnome-extension-manager
     gnomeExtensions.arcmenu
     gnomeExtensions.caffeine
     gnomeExtensions.just-perfection

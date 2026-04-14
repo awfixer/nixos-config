@@ -2,9 +2,9 @@
 
 let
   js = with pkgs; [
-    prisma
-    prisma-language-server
-    prisma-engines
+    #prisma
+    #prisma-language-server
+    #prisma-engines
     bun
     deno
   ];

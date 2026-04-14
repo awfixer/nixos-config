@@ -93,8 +93,8 @@ in
                 upower.enable = true;
                 # Enable CUPS to print documents.
                 printing = {
-                  enable = true;
-                  browsing = true;
+                  enable = false;
+                  browsing = false;
                   browsedConf = ''
                     BrowseDNSSDSubTypes _cups,_print
                     BrowseLocalProtocols all
@@ -104,9 +104,9 @@ in
                   '';
                 };
                 avahi = {
-                  enable = true;
-                  nssmdns4 = true;
-                  openFirewall = true;
+                  enable = false;
+                  nssmdns4 = false;
+                  openFirewall = false;
                 };
               };
             };

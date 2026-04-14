@@ -2,6 +2,7 @@
 
 let
   base = with pkgs; [
+    slack
     fuse
     signal-desktop
     qbittorrent-enhanced

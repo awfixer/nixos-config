@@ -3,7 +3,8 @@
 let
   cli = with pkgs; [
     kaggle
-    #graphite-cli
+    android-tools
+    graphite-cli
     just
     watchexec
     eza

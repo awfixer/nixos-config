@@ -2,6 +2,8 @@
 
 let
   dev = with pkgs; [
+    zig
+    zig-shell-completions
     cmake
     flutter
     gcc

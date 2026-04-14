@@ -1,6 +1,7 @@
-{ pkgs
-, lib
-, ...
+{
+  pkgs,
+  lib,
+  ...
 }:
 with pkgs;
 with lib;
@@ -29,8 +30,8 @@ with lib;
         };
       };
       apparmor.enable = true;
-      audit.enable = true;
-      auditd.enable = true;
+      audit.enable = false;
+      auditd.enable = false;
     };
   };
 }

@@ -45,6 +45,7 @@
       ../../modules/home-manager
       ./gc.nix
       ./packages
+      #./dconf.nix
     ];
     home = {
       enableNixpkgsReleaseCheck = false;

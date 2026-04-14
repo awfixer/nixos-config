@@ -17,6 +17,6 @@
     ./xdg
     #./zed
     ./zoxide
-    #./flatpak.nix
+    ./flatpak.nix
   ];
 }

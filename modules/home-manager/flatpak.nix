@@ -16,6 +16,8 @@
     packages = [
       "com.github.unrud.VideoDownloader"
       "io.github.prateekmedia.appimagepool"
+      "app.fluxer.Fluxer"
+      "io.github.brunofin.Cohesion"
     ];
     overrides.global = {
       Context.sockets = [
