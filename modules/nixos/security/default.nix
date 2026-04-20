@@ -4,6 +4,6 @@
     #./dns.nix
     ./firewall.nix
     #./firejail.nix
-    ./mullvad.nix
+    #./mullvad.nix
   ];
 }

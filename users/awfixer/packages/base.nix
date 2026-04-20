@@ -1,13 +1,10 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 let
   base = with pkgs; [
-    slack
-    fuse
-    signal-desktop
-    qbittorrent-enhanced
-    obsidian
+    #inputs.claude-desktop.packages.${system}.claude-desktop-with-fhs
     ghostty
+    gh
   ];
 in
 

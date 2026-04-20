@@ -2,6 +2,7 @@
 
 let
   dev = with pkgs; [
+    fontconfig
     zig
     zig-shell-completions
     cmake

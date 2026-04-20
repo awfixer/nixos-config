@@ -5,7 +5,7 @@
     ./base.nix
     ./cli.nix
     ./dev.nix
-    ./git.nix
+    #./git.nix
     #./hack.nix
     ./js.nix
     #./money.nix

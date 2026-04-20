@@ -1,7 +1,7 @@
 { ... }:
 {
   programs.man = {
-    enable = true;
-    generateCaches = true;
+    enable = false;
+    generateCaches = false;
   };
 }

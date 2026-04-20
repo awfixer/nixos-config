@@ -2,7 +2,12 @@
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
-    claude-desktop.url = "github:k3d3/claude-desktop-linux-flake";
+    flake-utils.url = "github:numtide/flake-utils";
+    claude-desktop = {
+      url = "github:k3d3/claude-desktop-linux-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
     #nixos-unified.url = "github:srid/nixos-unified";
     nixpkgs.url = "nixpkgs/nixos-unstable";
     determinate.url = "github:Determinatesystems/determinate/";

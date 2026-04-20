@@ -2,9 +2,7 @@
 
 let
   python = with pkgs; [
-    poetry
-    pyenv
-    uv-sort
+    python315
     uv
   ];
 in

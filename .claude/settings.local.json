@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nix eval *)",
+      "Bash(nix build *)",
+      "Bash(nix show-config *)",
+      "Bash(nixos-rebuild dry-build *)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "nixos"
+  ]
+}
