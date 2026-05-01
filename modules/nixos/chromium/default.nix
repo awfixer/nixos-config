@@ -11,6 +11,8 @@
         };
     extensions = [
       "ihcppnlmkfeclmehgdhjkglkbmiemnmp"
+      "eimadpbcbfnmbkopoojfekhnkhdbieeh"
+      "agleiimpggapjekcdhdjbmegjbbkleie"
       "cnjifjpddelmedmihgijeibhnjfabmlf"
       "aeblfdkhhhdcdjpifhhbdiojplfjncoa"
       "adjiklnjodbiaioggfpbpkhbfcnhgkfe"

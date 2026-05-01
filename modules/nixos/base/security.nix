@@ -29,7 +29,7 @@ with lib;
           enable = true;
         };
       };
-      apparmor.enable = true;
+      apparmor.enable = false;
       audit.enable = false;
       auditd.enable = false;
     };

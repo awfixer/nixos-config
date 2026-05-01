@@ -1,0 +1,3 @@
+[submodule "packages/glass"]
+	path = packages/glass
+	url = git@github.com:Glass-HQ/Glass

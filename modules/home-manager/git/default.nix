@@ -21,7 +21,7 @@ with lib;
 
   programs.git = {
     userName = "awfixer"; # Git username for commits
-    userEmail = "git@awfixer.me"; # Git email for commits
+    userEmail = "github@awfixer.me"; # Git email for commits
     enable = true; # Enable Git with Home Manager
 
     # Delta diff viewer configuration

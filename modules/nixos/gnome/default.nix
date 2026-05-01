@@ -1,13 +1,21 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   imports = [
     ./keyring.nix
   ];
   services = {
-    displayManager.gdm = {
-      settings = {
-
+    gnome = {
+      core-developer-tools.enable = false;
+      gnome-online-accounts.enable = false;
+      core-apps = {
+        enable = true;
       };
+      gnome-software.enable = false;
+      games.enable = false;
+      gnome-settings-daemon.enable = lib.mkForce false;
+    };
+    displayManager.gdm = {
+      settings = { };
       enable = true;
       autoSuspend = false;
       wayland = true;
