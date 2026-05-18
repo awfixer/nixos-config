@@ -71,7 +71,7 @@ in
             config = {
               boot.kernelPackages = pkgs.linuxPackages_latest;
               system.stateVersion = stateVersion;
-              documentation.man.generateCaches = true;
+              documentation.man.cache.enable = true;
               powerManagement.enable = true;
 
               environment = {
