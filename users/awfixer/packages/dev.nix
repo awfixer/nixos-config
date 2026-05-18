@@ -23,7 +23,6 @@ let
     gnumake
     pkg-config
     devbox
-    zed-editor
     ghostty
   ];
 in
