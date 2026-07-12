@@ -1,0 +1,10 @@
+# sops creation rules for this flake
+# Public age key only — never put AGE-SECRET-KEY material here.
+keys:
+  - &host_nixos age1exeyyqvjfstlvr7mjqesmg7wlmgd2rds8q4j5dca0y7z63ga7gnqfzkrzg
+
+creation_rules:
+  - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
+    key_groups:
+      - age:
+          - *host_nixos

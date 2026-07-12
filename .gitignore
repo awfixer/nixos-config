@@ -1,0 +1,9 @@
+node_modules
+
+**/result
+
+# Never commit age private keys or local 1Password export copies
+**/keys.txt
+**/*AGE-SECRET-KEY*
+1password-import/
+*.agekey
