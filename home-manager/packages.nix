@@ -15,6 +15,8 @@
     brightnessctl
     adwaita-icon-theme
     noto-fonts
+    nerd-fonts.jetbrains-mono
     libnotify
+    networkmanagerapplet
   ];
 }

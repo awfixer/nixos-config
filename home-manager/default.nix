@@ -2,8 +2,6 @@
 {
   home.stateVersion = "25.11";
 
-  xdg.portal.config.common.default = "*";
-
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
@@ -18,7 +16,9 @@
 
   imports = [
     ./keyring.nix
-    ./gnome.nix
+    ./hyprland.nix
+    ./waybar.nix
+    ./hyprlauncher.nix
     ./direnv.nix
     ./zsh.nix
     ./packages.nix
@@ -27,5 +27,7 @@
     ./helium.nix
     ./zen-browser.nix
     ./cursor.nix
+    ./ghostty.nix
+    ./windscribe.nix
   ];
 }

@@ -1,5 +1,5 @@
 {
-  description = "NixOS configuration with GNOME";
+  description = "NixOS configuration with Hyprland";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -31,6 +31,7 @@
           sddm-theme = pkgs.callPackage ./packages/sddm-theme { };
           helium-browser = pkgs.callPackage ./packages/helium { };
           zen-browser = pkgs.callPackage ./packages/zen-browser { };
+          windscribe = pkgs.callPackage ./packages/windscribe { };
         };
       };
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {

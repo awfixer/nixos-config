@@ -5,6 +5,7 @@
     (final: prev: {
       helium-browser = final.callPackage ../packages/helium { };
       zen-browser = final.callPackage ../packages/zen-browser { };
+      windscribe = final.callPackage ../packages/windscribe { };
     })
   ];
 
