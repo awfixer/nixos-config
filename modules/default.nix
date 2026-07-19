@@ -8,6 +8,7 @@
     ./hyprland.nix
     ./nixld.nix
     ./nixpkgs.nix
+    ./playwright-prisma.nix
     ./programs.nix
     ./services.nix
     ./sops.nix
