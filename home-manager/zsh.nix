@@ -15,10 +15,7 @@
 
     # Preserve existing sourced env
     initContent = ''
-      . "$HOME/.cargo/bin/env"
-      . "$HOME/.bun/bin/env"
       . "$HOME/.local/bin/env"
-      eval "$(atuin init zsh)"
     '';
 
     # History configuration

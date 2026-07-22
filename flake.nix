@@ -42,11 +42,10 @@
     {
       packages = {
         ${system} = {
-          sddm-theme = pkgs.callPackage ./packages/sddm-theme { };
           helium-browser = pkgs.callPackage ./packages/helium { };
-          orion-browser = pkgs.callPackage ./packages/orion { };
-          zen-browser = pkgs.callPackage ./packages/zen-browser { };
-          windscribe = pkgs.callPackage ./packages/windscribe { };
+          #orion-browser = pkgs.callPackage ./packages/orion { };
+          #zen-browser = pkgs.callPackage ./packages/zen-browser { };
+          #windscribe = pkgs.callPackage ./packages/windscribe { };
 
           # Playwright / Prisma system binaries (for reuse outside the OS config)
           playwright-test = pkgs.playwright-test;

@@ -28,37 +28,27 @@
   environment.systemPackages = with pkgs; [
     ghostty
     fd
-    gcc
     obsidian
-    pkg-config
     ghorg
     nixd
     openssl
     killall
     jq
     just
-    python3
-    atuin
-    android-tools
     sd
     jc
     ouch
     eza
     ripgrep
     zed-editor
-    nodejs_latest
     tree
     watchexec
     git
     nautilus
-    cmake
     gh
     vim
-    rustup
     unzip
-    gnumake
     zig
-    go
     btop
     direnv
   ];

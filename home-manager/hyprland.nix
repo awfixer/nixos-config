@@ -66,7 +66,6 @@
         # Apps
         "SUPER, Return, exec, ghostty"
         "SUPER, B, exec, helium"
-        "SUPER SHIFT, B, exec, oriongtk"
         "SUPER, E, exec, nautilus"
 
         # Window management
@@ -127,7 +126,7 @@
   };
 
   # Only set browser Wayland hint here. Do not set XDG_SESSION_* —
-  # GDM/start-hyprland own those; forcing them can break session registration.
+  # SDDM/start-hyprland own those; forcing them can break session registration.
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
   };

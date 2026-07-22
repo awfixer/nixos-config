@@ -1,18 +1,37 @@
 { pkgs, ... }:
 
+let
+  # nixpkgs sddm-astronaut: theme dir is share/sddm/themes/sddm-astronaut-theme
+  # Optional: .override { embeddedTheme = "purple_leaves"; }  # see Themes/*.conf
+  # Optional: .override { themeConfig = { FormPosition = "left"; /* … */ }; }
+  sddmTheme = pkgs.sddm-astronaut;
+in
 {
-  # Hyprland compositor + GDM (no GNOME desktop)
+  # Hyprland compositor + SDDM (astronaut theme); no full GNOME desktop
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
   };
 
-  services.displayManager.gdm.enable = true;
+  systemd.oomd.enable = false;
+  services.displayManager.sddm = {
+    enable = true;
+    wayland.enable = true;
+    theme = "sddm-astronaut-theme";
+    # Theme + its Qt6 QML deps (qtmultimedia, qtsvg, qtvirtualkeyboard) for the greeter
+    extraPackages = [ sddmTheme ];
+  };
   # Prefer Hyprland at the greeter (still selectable if more sessions appear)
   services.displayManager.defaultSession = "hyprland";
 
-  # Unlock login keyring with GDM session password
-  security.pam.services.gdm.enableGnomeKeyring = true;
+  # Theme must also be on the system path so SDDM finds it under share/sddm/themes
+  environment.systemPackages = with pkgs; [
+    sddmTheme
+    hyprpolkitagent
+  ];
+
+  # Unlock the login keyring with the SDDM session password (libsecret / Seahorse)
+  security.pam.services.sddm.enableGnomeKeyring = true;
   services.gnome.gnome-keyring.enable = true;
 
   # Waybar battery + power status
@@ -23,9 +42,4 @@
 
   # Hint Electron / Chromium forks (Helium) to use Wayland
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
-
-  # Polkit auth agent for graphical privilege prompts
-  environment.systemPackages = with pkgs; [
-    hyprpolkitagent
-  ];
 }
