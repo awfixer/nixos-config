@@ -25,6 +25,7 @@
     ./git.nix
     ./ssh.nix
     ./helium.nix
+    ./orion.nix
     ./zen-browser.nix
     ./cursor.nix
     ./ghostty.nix

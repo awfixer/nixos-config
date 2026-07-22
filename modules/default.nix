@@ -2,6 +2,7 @@
 {
   imports = [
     ./1password.nix
+    ./orion.nix
     ./chromium.nix
     ./enviorment.nix
     ./firewall.nix
@@ -21,4 +22,7 @@
 
   # Helper service + /opt/windscribe symlink required by the GUI client.
   services.windscribe.enable = true;
+
+  # Orion: /app → store symlinks for bundled WebKit helpers (1Password-safe, no bwrap).
+  programs.orion-browser.enable = true;
 }

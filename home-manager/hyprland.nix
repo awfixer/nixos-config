@@ -8,6 +8,10 @@
     systemd.enable = true;
 
     settings = {
+      # Apple Color LCD was auto-scaling to 2.0 (100% of HiDPI). 1.5 ≈ 75% —
+      # zooms out for more usable logical space (1536×960 vs 1152×720).
+      monitor = [ "eDP-1,preferred,auto,1.5" ];
+
       general = {
         gaps_in = 4;
         gaps_out = 8;
@@ -62,6 +66,7 @@
         # Apps
         "SUPER, Return, exec, ghostty"
         "SUPER, B, exec, helium"
+        "SUPER SHIFT, B, exec, oriongtk"
         "SUPER, E, exec, nautilus"
 
         # Window management

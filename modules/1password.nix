@@ -22,12 +22,34 @@ let
     allowed_origins = allowedOrigins;
   };
 
-  # Process names as seen in /proc/<pid>/comm (and custom_allowed_browsers).
-  # Helium's binary is `helium`, not `helium-browser`.
+  # Executable basenames for 1Password BrowserSupport allow-list
+  # (/etc/1password/custom_allowed_browsers). Must match the on-disk binary
+  # name (basename of /proc/<pid>/exe), not necessarily /proc/comm.
+  # Helium → helium; Orion GTK flatpak command → oriongtk.
+  # Note: Orion renames its process comm to "main"; allow-list still uses
+  # the executable basename `oriongtk`.
   allowedBrowsers = ''
     helium
+    oriongtk
     brave
   '';
+
+  # Config dirs where Chromium-style Native Messaging Hosts are read.
+  # Relative to $HOME/.config/ unless absolute (see seed script).
+  # Orion GTK beta uses the Flatpak-style tree even when installed natively:
+  #   ~/.var/app/com.kagi.OrionGtk/...
+  nmhConfigDirs = [
+    # relative → $HOME/.config/<dir>/NativeMessagingHosts
+    "net.imput.helium"
+    "com.kagi.OrionGtk"
+    "oriongtk"
+  ];
+
+  # Absolute-under-home paths (not under .config).
+  nmhHomeRelativeDirs = [
+    ".var/app/com.kagi.OrionGtk/config"
+    ".var/app/com.kagi.OrionGtk/config/chromium"
+  ];
 in
 {
   # Desktop app + CLI (installs setgid 1Password-BrowserSupport wrapper).
@@ -57,13 +79,20 @@ in
   };
 
   # 1Password's NMH installer only knows a hard-coded list of config dirs
-  # (chrome, chromium, brave, vivaldi, …). It never writes to Helium's
-  # ~/.config/net.imput.helium/NativeMessagingHosts/. Seed it for every user.
-  system.userActivationScripts.onepasswordHeliumNmh = {
+  # (chrome, chromium, brave, vivaldi, …). It never writes to Helium's or
+  # Orion's config trees. Seed NativeMessagingHosts for every user.
+  system.userActivationScripts.onepasswordCustomBrowserNmh = {
     text = ''
-      nmh_dir="$HOME/.config/net.imput.helium/NativeMessagingHosts"
-      mkdir -p "$nmh_dir"
-      printf '%s\n' '${nmhManifest}' > "$nmh_dir/com.1password.1password.json"
+      ${lib.concatMapStrings (dir: ''
+        nmh_dir="$HOME/.config/${dir}/NativeMessagingHosts"
+        mkdir -p "$nmh_dir"
+        printf '%s\n' '${nmhManifest}' > "$nmh_dir/com.1password.1password.json"
+      '') nmhConfigDirs}
+      ${lib.concatMapStrings (dir: ''
+        nmh_dir="$HOME/${dir}/NativeMessagingHosts"
+        mkdir -p "$nmh_dir"
+        printf '%s\n' '${nmhManifest}' > "$nmh_dir/com.1password.1password.json"
+      '') nmhHomeRelativeDirs}
     '';
   };
 }

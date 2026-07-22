@@ -29,6 +29,7 @@
     ghostty
     fd
     gcc
+    obsidian
     pkg-config
     ghorg
     nixd
