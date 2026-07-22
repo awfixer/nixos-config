@@ -57,9 +57,11 @@
       };
 
       # Daemon only — UI opens via Super release bind
+      # hyprpaper is started by its systemd user unit; restore last waypaper pick after session is up
       exec-once = [
         "${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent"
         "hyprlauncher -d"
+        "waypaper --restore"
       ];
 
       bind = [
@@ -67,9 +69,15 @@
         "SUPER, Return, exec, ghostty"
         "SUPER, B, exec, helium"
         "SUPER, E, exec, nautilus"
+        "SUPER, W, exec, waypaper"
 
         # Notification center (SwayNC)
         "SUPER, N, exec, swaync-client -t -sw"
+
+        # Screenshots (grim + slurp + satty)
+        "SUPER SHIFT, S, exec, screenshot-region"
+        "SUPER SHIFT, F, exec, screenshot-full"
+        "SUPER SHIFT, W, exec, screenshot-window"
 
         # Window management
         "SUPER, Q, killactive,"

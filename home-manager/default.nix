@@ -34,6 +34,8 @@
   imports = [
     ./keyring.nix
     ./hyprland.nix
+    ./wallpaper.nix
+    ./screenshots.nix
     ./waybar.nix
     ./swaync.nix
     ./hyprlauncher.nix
