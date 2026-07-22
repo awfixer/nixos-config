@@ -17,6 +17,7 @@
         modules-right = [
           "network"
           "battery"
+          "custom/notification"
           "tray"
         ];
 
@@ -64,6 +65,28 @@
         tray = {
           spacing = 8;
         };
+
+        # SwayNC: left-click toggles center, right-click toggles DND
+        "custom/notification" = {
+          tooltip = true;
+          format = "{icon}";
+          format-icons = {
+            notification = "󰂚<span foreground='#ff6b6b'><sup></sup></span>";
+            none = "󰂚";
+            dnd-notification = "󰂛<span foreground='#ff6b6b'><sup></sup></span>";
+            dnd-none = "󰂛";
+            inhibited-notification = "󰂚<span foreground='#ff6b6b'><sup></sup></span>";
+            inhibited-none = "󰂚";
+            dnd-inhibited-notification = "󰂛<span foreground='#ff6b6b'><sup></sup></span>";
+            dnd-inhibited-none = "󰂛";
+          };
+          return-type = "json";
+          exec-if = "which swaync-client";
+          exec = "swaync-client -swb";
+          on-click = "swaync-client -t -sw";
+          on-click-right = "swaync-client -d -sw";
+          escape = true;
+        };
       };
     };
 
@@ -101,9 +124,14 @@
       #clock,
       #network,
       #battery,
+      #custom-notification,
       #tray {
         padding: 0 12px;
         margin: 0 2px;
+      }
+
+      #custom-notification {
+        color: #dadada;
       }
 
       #network.disconnected {

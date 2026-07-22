@@ -68,6 +68,9 @@
         "SUPER, B, exec, helium"
         "SUPER, E, exec, nautilus"
 
+        # Notification center (SwayNC)
+        "SUPER, N, exec, swaync-client -t -sw"
+
         # Window management
         "SUPER, Q, killactive,"
         "SUPER, F, fullscreen,"

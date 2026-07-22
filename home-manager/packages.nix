@@ -18,5 +18,10 @@
     nerd-fonts.jetbrains-mono
     libnotify
     networkmanagerapplet
+
+    # Office: LibreOffice (full suite) + OnlyOffice (stronger MS Office fidelity)
+    libreoffice-fresh
+    onlyoffice-desktopeditors
   ];
 }
+
