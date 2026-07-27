@@ -13,5 +13,5 @@ in
     extensions = [ onePasswordExtId ];
   };
 
-  environment.systemPackages = with pkgs; [ ];
+  environment.systemPackages = with pkgs; [ chromium ];
 }

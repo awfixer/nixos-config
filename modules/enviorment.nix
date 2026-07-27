@@ -26,6 +26,7 @@
 
 
   environment.systemPackages = with pkgs; [
+    firefox
     ghostty
     fd
     obsidian
@@ -44,6 +45,7 @@
     tree
     watchexec
     git
+    uv
     nautilus
     gh
     vim

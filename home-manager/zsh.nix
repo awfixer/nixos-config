@@ -16,6 +16,7 @@
     # Preserve existing sourced env
     initContent = ''
       . "$HOME/.local/bin/env"
+      export PATH="/home/awfixer/.bun/bin:$PATH"
     '';
 
     # History configuration

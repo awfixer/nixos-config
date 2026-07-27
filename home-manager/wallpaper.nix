@@ -6,7 +6,13 @@ let
   defaultWallpaper = "${home}/Pictures/Wallpapers/JPEG/Cyberpunk.jpeg";
 in
 {
-  home.packages = [ pkgs.waypaper ];
+  # waypaper detects backends with `which <binary>` — the systemd unit alone
+  # is not enough; hyprpaper (and a swaybg fallback) must be on PATH.
+  home.packages = with pkgs; [
+    waypaper
+    hyprpaper
+    swaybg
+  ];
 
   services.hyprpaper = {
     enable = true;
@@ -26,7 +32,7 @@ in
     };
   };
 
-  # Waypaper GUI → hyprpaper backend; folder matches existing library.
+  # Waypaper GUI → hyprpaper by default; swaybg is available if you switch in the UI.
   xdg.configFile."waypaper/config.ini".text = ''
     [Settings]
     language = en

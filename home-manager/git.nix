@@ -23,9 +23,4 @@
       };
     };
   };
-
-  # Expose SSH_AUTH_SOCK for applications that read it directly
-  home.sessionVariables = {
-    SSH_AUTH_SOCK = "${config.home.homeDirectory}/.1password/agent.sock";
-  };
 }
