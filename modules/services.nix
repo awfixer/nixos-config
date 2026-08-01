@@ -1,10 +1,16 @@
 { config, lib, pkgs, ... }:
 
 {
-  services.xserver.enable = true;
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
+  # xkb layout only — full X server stack is not required for Wayland SDDM/Hyprland,
+  # but NixOS still wires xkb via this option for greeter/XWayland.
+  services.xserver = {
+    enable = true;
+    xkb = {
+      layout = "us";
+      variant = "";
+    };
+    # No X desktop extras.
+    excludePackages = [ ];
   };
 
   services.pulseaudio.enable = false;
@@ -12,7 +18,10 @@
   services.pipewire = {
     enable = true;
     alsa.enable = true;
-    alsa.support32Bit = true;
+    # No 32-bit Steam/wine stack on this box — drop multi-lib audio.
+    alsa.support32Bit = false;
     pulse.enable = true;
+    jack.enable = false;
+    # WirePlumber is enough; no extra session managers.
   };
 }

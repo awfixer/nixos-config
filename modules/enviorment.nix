@@ -25,12 +25,23 @@
 
 
 
+  # Keep the always-on system set lean. Heavy GUI apps stay as packages but
+  # are not started as daemons — open only when needed (RAM is the constraint).
   environment.systemPackages = with pkgs; [
-    firefox
     ghostty
     fd
-    obsidian
     ghorg
+    go
+    rustup
+    python3
+    gcc
+    gleam
+    elixir
+    erlang
+    pkg-config
+    webkitgtk_6_0
+    gtk4
+    gtk4-layer-shell
     nixd
     openssl
     killall
@@ -41,11 +52,11 @@
     ouch
     eza
     ripgrep
-    zed-editor
     tree
     watchexec
     git
     uv
+    nodejs_latest
     nautilus
     gh
     vim
@@ -53,5 +64,9 @@
     zig
     btop
     direnv
+    # On-demand editors / browsers (not auto-started)
+    firefox
+    obsidian
+    zed-editor
   ];
 }

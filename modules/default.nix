@@ -6,6 +6,7 @@
     ./chromium.nix
     ./enviorment.nix
     ./firewall.nix
+    ./flatpak.nix
     ./hyprland.nix
     ./nixld.nix
     ./nixpkgs.nix
@@ -13,6 +14,7 @@
     ./programs.nix
     ./services.nix
     ./sops.nix
+    ./memory.nix
     ./systemd.nix
     ./tailscale.nix
     ./users.nix

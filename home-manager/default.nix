@@ -45,6 +45,7 @@
     ./git.nix
     ./ssh.nix
     ./helium.nix
+    ./buzz.nix
     #./orion.nix
     #./zen-browser.nix
     #./cursor.nix

@@ -11,6 +11,7 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.7.0";
   };
 
   outputs =
@@ -19,6 +20,7 @@
       nixpkgs,
       home-manager,
       sops-nix,
+      nix-flatpak,
       ...
     }:
     let
@@ -43,6 +45,7 @@
       packages = {
         ${system} = {
           helium-browser = pkgs.callPackage ./packages/helium { };
+          buzz = pkgs.callPackage ./packages/buzz { };
           #orion-browser = pkgs.callPackage ./packages/orion { };
           #zen-browser = pkgs.callPackage ./packages/zen-browser { };
           #windscribe = pkgs.callPackage ./packages/windscribe { };
@@ -79,6 +82,7 @@
           /etc/nixos/hardware-configuration.nix
           home-manager.nixosModules.home-manager
           sops-nix.nixosModules.sops
+          nix-flatpak.nixosModules.nix-flatpak
           ./modules
           (
             { config, pkgs, ... }:

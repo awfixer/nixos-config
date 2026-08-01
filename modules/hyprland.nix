@@ -13,7 +13,7 @@ in
     xwayland.enable = true;
   };
 
-  systemd.oomd.enable = false;
+  # OOM policy lives in modules/systemd.nix (oomd/earlyoom off + sysctl + DefaultOOMPolicy)
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;

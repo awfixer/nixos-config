@@ -15,7 +15,10 @@
 
     # Preserve existing sourced env
     initContent = ''
+      . "$HOME/.pms/bin/env"
+      . "$HOME/go/bin/env"
       . "$HOME/.local/bin/env"
+      . "$HOME/.executor/bin/env"
       export PATH="/home/awfixer/.bun/bin:$PATH"
     '';
 

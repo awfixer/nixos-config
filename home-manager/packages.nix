@@ -7,7 +7,6 @@
 
 {
   home.packages = with pkgs; [
-    vesktop
     zoxide
     fzf
     jq
@@ -17,9 +16,10 @@
     noto-fonts
     nerd-fonts.jetbrains-mono
     libnotify
-    networkmanagerapplet
+    # nm-applet is optional; waybar already shows network. Keep CLI control via nmcli.
 
-    # Office: LibreOffice (full suite) + OnlyOffice (stronger MS Office fidelity)
+    # On-demand only (not session daemons)
+    vesktop
     libreoffice-fresh
     onlyoffice-desktopeditors
   ];
