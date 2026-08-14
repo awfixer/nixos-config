@@ -4,7 +4,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "nixos";
+  # Hostname is set per-host under hosts/*/default.nix
   networking.networkmanager.enable = true;
 
   time.timeZone = "America/Los_Angeles";
@@ -29,19 +29,14 @@
   # are not started as daemons — open only when needed (RAM is the constraint).
   environment.systemPackages = with pkgs; [
     ghostty
+    zed-editor
+    chromium
+    mpv
     fd
     ghorg
-    go
     rustup
     python3
-    gcc
-    gleam
-    elixir
-    erlang
     pkg-config
-    webkitgtk_6_0
-    gtk4
-    gtk4-layer-shell
     nixd
     openssl
     killall
@@ -56,17 +51,17 @@
     watchexec
     git
     uv
-    nodejs_latest
     nautilus
+    beamPackages.erlang
+    beamPackages.elixir
+    gleam
+    gtk4-layer-shell
+    gtk4
     gh
     vim
     unzip
     zig
     btop
     direnv
-    # On-demand editors / browsers (not auto-started)
-    firefox
-    obsidian
-    zed-editor
   ];
 }

@@ -15,8 +15,6 @@
 
     # Preserve existing sourced env
     initContent = ''
-      . "$HOME/.pms/bin/env"
-      . "$HOME/go/bin/env"
       . "$HOME/.local/bin/env"
       . "$HOME/.executor/bin/env"
       export PATH="/home/awfixer/.bun/bin:$PATH"
@@ -64,6 +62,7 @@
 
     # Useful aliases
     shellAliases = {
+      scrub = "sudo rm -rf /tmp/ .cache .cargo .bun/install/cache .npm .mozilla **/.direnv && clean && reboot";
       clone = "git clone --depth=1";
       clean = "sudo nix-collect-garbage -d";
       ll = "ls -lah";
@@ -74,9 +73,14 @@
       grep = "grep --color=auto";
       df = "df -h";
       free = "free -h";
-      nrs = "clean && sudo nixos-rebuild switch --flake '/home/awfixer/nixos-config#nixos' --impure && sudo systemctl restart home-manager-awfixer.service";
+      # tyyt — release binary via ~/.local/bin (see Super+Y in hyprland.nix)
+      tyyt = "/home/awfixer/.local/bin/tyyt";
+      # Pure flake — hardware is vendored under hosts/laptop (no --impure).
+      # GC is a separate `clean` alias; do not thrash the store on every switch.
+      nrs = "clean && sudo nixos-rebuild switch --flake '/home/awfixer/nixos-config#laptop' && sudo systemctl restart home-manager-awfixer.service";
       hm-act = "sudo systemctl restart home-manager-awfixer.service";
       nfu = "nix flake update";
+      astro = "bun astro";
       ga = "git add";
       gc = "git commit -m";
       gp = "git push";

@@ -5,6 +5,7 @@
     (final: prev: {
       helium-browser = final.callPackage ../packages/helium { };
       buzz = final.callPackage ../packages/buzz { };
+      gloomberb = final.callPackage ../packages/gloomberb { };
       #orion-browser = final.callPackage ../packages/orion { };
       #zen-browser = final.callPackage ../packages/zen-browser { };
       #windscribe = final.callPackage ../packages/windscribe { };

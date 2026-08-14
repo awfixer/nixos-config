@@ -28,8 +28,9 @@
         };
       };
 
+      # Animations off on 8 GiB / m3-6Y30 — less compositor CPU/RAM churn.
       animations = {
-        enabled = true;
+        enabled = false;
         animation = [
           "windows, 1, 3, default"
           "workspaces, 1, 3, default"
@@ -62,17 +63,30 @@
         "${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent"
         "hyprlauncher -d"
         "waypaper --restore"
+        # Blueman tray (pair/connect devices); full UI: Super+Shift+B
+        "blueman-applet"
+        # MPRIS proxy so Waybar/SwayNC follow the active media player
+        "playerctld daemon"
       ];
 
       bind = [
         # Apps
         "SUPER, Return, exec, ghostty"
         "SUPER, B, exec, helium"
+        "SUPER SHIFT, B, exec, blueman-manager"
         "SUPER, E, exec, nautilus"
         "SUPER, W, exec, waypaper"
+        "SUPER, C, exec, gnome-calendar"
+        "SUPER SHIFT, P, exec, gnome-power-statistics"
+        # tyyt — GTK YouTube client (symlink: ~/.local/bin/tyyt)
+        "SUPER, Y, exec, /home/awfixer/.local/bin/tyyt"
 
-        # Notification center (SwayNC)
+        # Notification center (SwayNC) — GNOME-like control center
         "SUPER, N, exec, swaync-client -t -sw"
+
+        # Waybar visibility (edge-reveal also auto-hides when pointer leaves top)
+        "SUPER, O, exec, waybar-toggle"
+
 
         # Screenshots (grim + slurp + satty)
         "SUPER SHIFT, S, exec, screenshot-region"
@@ -125,20 +139,43 @@
     };
   };
 
-  # Portals: Hyprland system module provides xdg-desktop-portal-hyprland;
-  # GTK portal for file picker / flatpak-style dialogs.
+  # Portals for screenshare / file pickers (Vesktop, browsers, Flatpak).
+  # Hyprland implements ScreenCast + Screenshot; GTK covers FileChooser etc.
+  # Session desktop is "Hyprland" → config.hyprland writes hyprland-portals.conf
+  # which xdg-desktop-portal prefers over portals.conf.
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    config.common.default = [
-      "hyprland"
-      "gtk"
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-hyprland
+      xdg-desktop-portal-gtk
     ];
+    config = {
+      common = {
+        default = [
+          "hyprland"
+          "gtk"
+        ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+      };
+      hyprland = {
+        default = [
+          "hyprland"
+          "gtk"
+        ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+      };
+    };
   };
 
   # Only set browser Wayland hint here. Do not set XDG_SESSION_* —
   # SDDM/start-hyprland own those; forcing them can break session registration.
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
+    # Electron / Chromium WebRTC capture via XDG ScreenCast → PipeWire
+    ELECTRON_OZONE_PLATFORM_HINT = "auto";
   };
 }

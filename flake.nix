@@ -46,6 +46,7 @@
         ${system} = {
           helium-browser = pkgs.callPackage ./packages/helium { };
           buzz = pkgs.callPackage ./packages/buzz { };
+          gloomberb = pkgs.callPackage ./packages/gloomberb { };
           #orion-browser = pkgs.callPackage ./packages/orion { };
           #zen-browser = pkgs.callPackage ./packages/zen-browser { };
           #windscribe = pkgs.callPackage ./packages/windscribe { };
@@ -76,28 +77,35 @@
         '';
       };
 
-      nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          /etc/nixos/hardware-configuration.nix
-          home-manager.nixosModules.home-manager
-          sops-nix.nixosModules.sops
-          nix-flatpak.nixosModules.nix-flatpak
-          ./modules
-          (
-            { config, pkgs, ... }:
-            {
-              system.stateVersion = "25.11";
-
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                backupFileExtension = "backup";
-                users.awfixer = import ./home-manager;
-              };
-            }
-          )
-        ];
-      };
+      nixosConfigurations =
+        let
+          # Host lives under ./hosts/laptop (hardware + zram/swap are pure).
+          laptop = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            modules = [
+              ./hosts/laptop
+              home-manager.nixosModules.home-manager
+              sops-nix.nixosModules.sops
+              nix-flatpak.nixosModules.nix-flatpak
+              ./modules
+              (
+                { ... }:
+                {
+                  home-manager = {
+                    useGlobalPkgs = true;
+                    useUserPackages = true;
+                    backupFileExtension = "backup";
+                    users.awfixer = import ./home-manager;
+                  };
+                }
+              )
+            ];
+          };
+        in
+        {
+          inherit laptop;
+          # Back-compat for `.#nixos` / older aliases
+          nixos = laptop;
+        };
     };
 }

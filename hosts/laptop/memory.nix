@@ -7,24 +7,35 @@
   # Problem: rustc alone peaks ~5 GiB; with zero swap the kernel OOM-kills it
   # and systemd may tear down the whole ghostty scope (including the agent).
   #
+  # Observed on this machine (zstd): ~3.7 GiB swapped → ~0.9 GiB compressed
+  # (~4:1). That headroom is why we size zram larger than physical RAM.
+  #
   # Layout (do NOT enable boot.zswap — it conflicts with zramSwap):
   #   1. zram (priority 100) — compressed RAM, first choice, fast
-  #   2. /var/lib/swapfile 8 GiB (priority 10) — NVMe overflow when zram full
+  #   2. /var/lib/swapfile 12 GiB (priority 10) — NVMe overflow when zram full
   # ---------------------------------------------------------------------------
 
   zramSwap = {
     enable = true;
     algorithm = "zstd";
-    # Store up to 100% of RAM as compressed pages (typically holds ~2×+ logical).
-    memoryPercent = 100;
+    # Logical capacity as % of RAM. 200% ≈ 15.4 GiB advertised on 7.7 GiB;
+    # with ~3–4× compression the resident footprint stays well under RAM
+    # until pathological incompressible load (then write pressure hits the
+    # disk swapfile below).
+    memoryPercent = 200;
+    # Cap absolute size so a future RAM upgrade does not silently grow zram
+    # past ~16 GiB logical without a conscious edit.
+    memoryMax = 16 * 1024 * 1024 * 1024;
     priority = 100;
+    swapDevices = 1;
   };
 
-  # Auto-created on activation (size is MiB). 115 GiB free on root — safe.
+  # Auto-created on activation (size is MiB). Root has ~95 GiB free — safe.
+  # Slightly larger than before so overflow after expanded zram still has room.
   swapDevices = [
     {
       device = "/var/lib/swapfile";
-      size = 8 * 1024; # 8 GiB
+      size = 12 * 1024; # 12 GiB
       priority = 10;
     }
   ];
@@ -34,6 +45,13 @@
     useTmpfs = false;
     cleanOnBoot = true;
   };
+
+  # Explicit: zswap + zram conflict; leave zswap off.
+  boot.zswap.enable = false;
+
+  # No automatic GC/optimise timers (background I/O + memory spikes under builds).
+  nix.gc.automatic = false;
+  nix.optimise.automatic = false;
 
   boot.kernel.sysctl = {
     # zram-friendly: swap early to compressed RAM rather than thrashing late.

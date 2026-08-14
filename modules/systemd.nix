@@ -47,7 +47,8 @@
   };
 
   # ---------------------------------------------------------------------------
-  # Slim background surface (keep display, net, audio, keyring)
+  # Slim background surface (keep display, net, audio, keyring, BT)
+  # Optional daemons: enable = false only — leave config for easy re-enable.
   # ---------------------------------------------------------------------------
 
   networking.modemmanager.enable = false;
@@ -59,14 +60,19 @@
   services.speechd.enable = false;
   services.gnome.gnome-online-accounts.enable = false;
   services.gnome.gcr-ssh-agent.enable = false;
+  services.gnome.evolution-data-server.enable = false;
+  services.gnome.localsearch.enable = false;
+  services.gnome.tinysparql.enable = false;
 
-  # No printers / mDNS / location on this laptop.
+  # No printers / location / firmware-update daemon on this laptop.
+  # mDNS/avahi is owned by modules/spotify.nix (Connect + LAN speaker discovery).
   services.printing.enable = false;
-  services.avahi.enable = false;
   services.geoclue2.enable = false;
   services.fwupd.enable = false;
-  hardware.bluetooth.enable = false;
-  services.blueman.enable = false;
+  services.colord.enable = false;
+  services.sysprof.enable = false;
+  services.tlp.enable = false;
+  # Bluetooth + blueman live in services.nix (needed for speakers / peripherals).
 
   # Optional noise units.
   systemd.coredump.enable = false;
@@ -117,6 +123,8 @@
   systemd.user.sockets.gcr-ssh-agent.enable = false;
   systemd.user.services.speech-dispatcher.enable = false;
   systemd.user.sockets.speech-dispatcher.enable = lib.mkDefault false;
+  # Bluetooth OBEX (file push) — not needed; pair/A2DP still work without it.
+  systemd.user.services.obex.enable = false;
 
 }
 

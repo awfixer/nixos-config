@@ -11,6 +11,15 @@ in
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
+    # Enables xdg-desktop-portal-hyprland (ScreenCast for Vesktop/Discord).
+    # Portal *preference* order is set in home-manager/hyprland.nix.
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
+  };
+
+  # GTK portal for FileChooser; hyprland portal comes from programs.hyprland.
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
   # OOM policy lives in modules/systemd.nix (oomd/earlyoom off + sysctl + DefaultOOMPolicy)
@@ -34,8 +43,10 @@ in
   security.pam.services.sddm.enableGnomeKeyring = true;
   services.gnome.gnome-keyring.enable = true;
 
-  # Waybar battery + power status
+  # Waybar battery + power status / power-profiles module
   services.upower.enable = true;
+  services.power-profiles-daemon.enable = true;
+
 
   # Intel iGPU (MacBook9,1) — explicit so Wayland sessions always get mesa
   hardware.graphics.enable = true;

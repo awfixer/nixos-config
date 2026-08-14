@@ -28,35 +28,51 @@ in
   # SSH_AUTH_SOCK must point to 1Password agent for:
   #   - SSH agent forwarding (ForwardAgent picks up $SSH_AUTH_SOCK)
   #   - Non-SSH programs that read the socket directly
-  # This must match the IdentityAgent paths set in matchBlocks below.
+  # This must match the IdentityAgent paths set in settings below.
   home.sessionVariables = {
     SSH_AUTH_SOCK = onePasswordAgent;
   };
 
   programs.ssh = {
     enable = true;
-    matchBlocks = {
+    # Defaults will be removed from home-manager; pin them explicitly.
+    enableDefaultConfig = false;
+    settings = {
+      # Former home-manager default Host * values (kept intentionally).
+      "*" = {
+        ForwardAgent = false;
+        AddKeysToAgent = "no";
+        Compression = false;
+        ServerAliveInterval = 0;
+        ServerAliveCountMax = 3;
+        HashKnownHosts = false;
+        UserKnownHostsFile = "~/.ssh/known_hosts";
+        ControlMaster = "no";
+        ControlPath = "~/.ssh/master-%r@%n:%p";
+        ControlPersist = "no";
+      };
+
       # Only remote host: ssh mine  ≡  ssh awfixer@100.111.226.66
       "mine" = {
-        hostname = "100.111.226.66";
-        user = "awfixer";
-        forwardAgent = true;
-        identityAgent = onePasswordAgent;
+        HostName = "100.111.226.66";
+        User = "awfixer";
+        ForwardAgent = true;
+        IdentityAgent = onePasswordAgent;
       };
 
       # Default GitHub → awfixer account
       "github.com" = {
-        identityAgent = onePasswordAgent;
-        identitiesOnly = true;
-        identityFile = "${config.home.homeDirectory}/.ssh/github.pub";
+        IdentityAgent = onePasswordAgent;
+        IdentitiesOnly = true;
+        IdentityFile = "${config.home.homeDirectory}/.ssh/github.pub";
       };
 
       # Second GitHub account: git@github.com-solved:org/repo.git
       "github.com-solved" = {
-        hostname = "github.com";
-        identityAgent = onePasswordAgent;
-        identitiesOnly = true;
-        identityFile = [
+        HostName = "github.com";
+        IdentityAgent = onePasswordAgent;
+        IdentitiesOnly = true;
+        IdentityFile = [
           "${config.home.homeDirectory}/.ssh/github-solved.pub"
           "${config.home.homeDirectory}/.ssh/github-solved-signing.pub"
         ];

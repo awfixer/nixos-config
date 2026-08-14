@@ -12,9 +12,11 @@
     ./nixpkgs.nix
     ./playwright-prisma.nix
     ./programs.nix
+    ./security-keys.nix
     ./services.nix
     ./sops.nix
-    ./memory.nix
+    ./spotify.nix
+    # memory / zram / swapfile live in hosts/laptop/memory.nix
     ./systemd.nix
     ./tailscale.nix
     ./users.nix
