@@ -73,7 +73,10 @@ class ExtHub:
         self._pending[req_id] = fut
         sock = self._pick_socket(payload.get("tabId"))
         await sock.send_json({"id": req_id, "type": "cmd", "op": op, "payload": payload})
-        reply = await asyncio.wait_for(fut, timeout=30)
+        try:
+            reply = await asyncio.wait_for(fut, timeout=30)
+        finally:
+            self._pending.pop(req_id, None)
         if not reply.get("ok"):
             err = str(reply.get("error") or "rpc_failed")
             self.last_error = err

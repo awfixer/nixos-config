@@ -1,4 +1,5 @@
 import asyncio
+from unittest import mock
 
 import aiohttp
 import pytest
@@ -133,5 +134,28 @@ async def test_rpc_attach_and_send_command():
                 )
                 assert result["result"]["value"] == "Example"
                 task.cancel()
+    finally:
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_rpc_timeout_clears_pending():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ws:
+                await ws.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ws.receive_json()
+
+                real_wait_for = asyncio.wait_for
+
+                async def fast_wait_for(aw, timeout=None):
+                    return await real_wait_for(aw, timeout=0.05)
+
+                with mock.patch("asyncio.wait_for", fast_wait_for):
+                    with pytest.raises(asyncio.TimeoutError):
+                        await hub.rpc("list_tabs")
+                assert hub._pending == {}
     finally:
         await hub.stop()
