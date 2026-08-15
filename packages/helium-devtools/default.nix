@@ -90,6 +90,15 @@ EOF
 
     npmDepsHash = "sha256-tow/ir6++u8kDSYp4wDYZ9fvK9Z0nw9/QzqVN6uPIfs=";
     nodejs = nodejs_latest;
+    nativeBuildInputs = [ makeWrapper ];
+
+    # attach_child_tools uses MCP's sanitized stdio env, so parent wrapper
+    # vars never reach this process. Bake them into the bin itself.
+    postInstall = ''
+      wrapProgram $out/bin/chrome-devtools-mcp \
+        --set CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS 1 \
+        --set CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS 1
+    '';
 
     meta = {
       description = "Chrome DevTools MCP server";
