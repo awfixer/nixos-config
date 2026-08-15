@@ -1,0 +1,120 @@
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import Any
+
+from aiohttp import WSMsgType, web
+
+log = logging.getLogger("helium_devtools.ext")
+
+
+class ExtHub:
+    def __init__(self, token: str) -> None:
+        self._token = token
+        self._runner: web.AppRunner | None = None
+        self._site: web.TCPSite | None = None
+        self._sockets: dict[int, web.WebSocketResponse] = {}
+        self._tab_owner: dict[int, int] = {}
+        self._tabs: dict[int, dict[str, Any]] = {}
+        self._attached: set[int] = set()
+        self._pending: dict[str, asyncio.Future[dict[str, Any]]] = {}
+        self._sock_seq = 0
+        self.last_error: str | None = None
+        self.ws_url: str = ""
+
+    @property
+    def connected(self) -> bool:
+        return bool(self._sockets)
+
+    @property
+    def tabs(self) -> list[dict[str, Any]]:
+        return list(self._tabs.values())
+
+    @property
+    def attached(self) -> list[int]:
+        return sorted(self._attached)
+
+    async def start(self, bind: str, port: int) -> None:
+        app = web.Application()
+        app.router.add_get("/", self._ws_handler)
+        self._runner = web.AppRunner(app)
+        await self._runner.setup()
+        self._site = web.TCPSite(self._runner, bind, port)
+        await self._site.start()
+        sockets = self._site._server.sockets  # type: ignore[union-attr]
+        bound = sockets[0].getsockname()[1]
+        self.ws_url = f"ws://{bind}:{bound}"
+
+    async def stop(self) -> None:
+        if self._site:
+            await self._site.stop()
+        if self._runner:
+            await self._runner.cleanup()
+        self._site = None
+        self._runner = None
+
+    def _ingest_tabs(self, sock_id: int, tabs: list[dict[str, Any]]) -> None:
+        for tab in tabs:
+            tid = int(tab["id"])
+            self._tabs[tid] = tab
+            self._tab_owner[tid] = sock_id
+
+    async def _ws_handler(self, request: web.Request) -> web.WebSocketResponse:
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        first = await ws.receive()
+        if first.type != WSMsgType.TEXT:
+            await ws.close()
+            return ws
+        try:
+            data = first.json()
+        except Exception:
+            await ws.close()
+            return ws
+        if data.get("type") != "hello":
+            await ws.close()
+            return ws
+        if data.get("token") != self._token:
+            log.warning("extension hello rejected: token_mismatch")
+            await ws.send_json({"type": "hello_fail", "error": "token_mismatch"})
+            await ws.close()
+            return ws
+        await ws.send_json({"type": "hello_ok"})
+        sock_id = self._sock_seq
+        self._sock_seq += 1
+        self._sockets[sock_id] = ws
+        try:
+            async for msg in ws:
+                if msg.type != WSMsgType.TEXT:
+                    break
+                payload = msg.json()
+                kind = payload.get("type")
+                if kind == "tabs_snapshot":
+                    self._ingest_tabs(sock_id, payload.get("tabs") or [])
+                elif kind == "tab_event":
+                    tab = payload.get("tab") or {}
+                    event = payload.get("kind")
+                    if event == "removed":
+                        tid = int(tab.get("id", -1))
+                        self._tabs.pop(tid, None)
+                        self._tab_owner.pop(tid, None)
+                        self._attached.discard(tid)
+                    elif tab.get("id") is not None:
+                        self._ingest_tabs(sock_id, [tab])
+                elif kind == "reply":
+                    fut = self._pending.pop(payload.get("id"), None)
+                    if fut and not fut.done():
+                        fut.set_result(payload)
+                elif kind == "cdp_event":
+                    handler = getattr(self, "_cdp_event_handler", None)
+                    if handler:
+                        handler(payload)
+        finally:
+            self._sockets.pop(sock_id, None)
+            dead = [tid for tid, owner in self._tab_owner.items() if owner == sock_id]
+            for tid in dead:
+                self._tab_owner.pop(tid, None)
+                self._tabs.pop(tid, None)
+                self._attached.discard(tid)
+        return ws
