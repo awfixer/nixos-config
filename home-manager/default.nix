@@ -45,6 +45,7 @@
     ./git.nix
     ./ssh.nix
     ./helium.nix
+    ./helium-devtools.nix
     ./vesktop.nix
     ./buzz.nix
     ./gloomberb.nix

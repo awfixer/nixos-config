@@ -1,13 +1,20 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  extDir = "${config.xdg.dataHome}/helium-devtools/extension";
+  heliumWrapped = pkgs.symlinkJoin {
+    name = "helium-browser-devtools";
+    paths = [ pkgs.helium-browser ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/helium \
+        --add-flags "--load-extension=${extDir}" \
+        --add-flags "--disable-features=DisableLoadExtensionCommandLineSwitch"
+    '';
+  };
+in
 {
-  home.packages = [
-    pkgs.helium-browser
-  ];
+  home.packages = [ heliumWrapped ];
 
-  # Prefer Helium for CLI tools that honor $BROWSER
   home.sessionVariables.BROWSER = "helium";
-
-  # Set Helium as the system default web browser (GNOME/XDG)
-
 }
