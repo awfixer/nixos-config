@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Grok Helium DevTools",
+  "version": "0.1.0",
+  "description": "Attach Grok to this Helium window via chrome.debugger.",
+  "action": {
+    "default_title": "Grok Helium DevTools",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "debugger",
+    "tabs",
+    "scripting",
+    "webNavigation",
+    "management",
+    "cookies",
+    "storage",
+    "webRequest"
+  ],
+  "host_permissions": ["<all_urls>"]
+}
