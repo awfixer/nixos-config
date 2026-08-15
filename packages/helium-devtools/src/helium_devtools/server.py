@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import signal
 import socket
-import sys
 from dataclasses import dataclass
 
 import uvicorn
@@ -66,7 +65,7 @@ async def serve(cfg: Config) -> None:
         mcp.settings.port = cfg.mcp_port if cfg.mcp_port else 0
         mcp.settings.streamable_http_path = "/mcp"
         if cfg.cdp_mcp:
-            cmd, args = child_argv(cfg.cdp_mcp)
+            cmd, args = child_argv(cfg.cdp_mcp, f"http://{cfg.bind}:{cfg.cdp_port}")
             await attach_child_tools(mcp, cmd, args)
             child_watch = getattr(mcp, "_child_watch", None)
         # Bind here so EADDRINUSE is OSError; uvicorn.Server.startup sys.exit()s instead.
@@ -87,8 +86,9 @@ async def serve(cfg: Config) -> None:
                 {http_task, child_watch},
                 return_when=asyncio.FIRST_COMPLETED,
             )
-            if child_watch in done and not child_watch.cancelled():
-                sys.exit(1)
+            if http_task not in done:
+                # Child stdio died. Extra helium_* tools stay up.
+                await http_task
         else:
             await http_task
     finally:

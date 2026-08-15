@@ -3,8 +3,17 @@ import asyncio
 import aiohttp
 import pytest
 
-from helium_devtools.cdp_shim import start_cdp
+from helium_devtools.cdp_shim import is_restricted_url, start_cdp
 from helium_devtools.ext_hub import ExtHub
+
+
+def test_helium_internal_urls_are_restricted():
+    assert is_restricted_url("helium://new-tab")
+    assert is_restricted_url("helium://settings")
+    assert is_restricted_url("chrome://newtab")
+    assert not is_restricted_url("https://example.com/")
+    assert not is_restricted_url("about:blank")
+    assert not is_restricted_url("about:srcdoc")
 
 
 @pytest.mark.asyncio

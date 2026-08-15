@@ -9,6 +9,7 @@ let
   od = open-design.packages.${pkgs.stdenv.hostPlatform.system};
   daemon = od.daemon;
   web = od.web;
+  vela = pkgs.vela-cli;
 
   # Loopback only — matches modules/firewall.nix (no inbound holes).
   listenHost = "127.0.0.1";
@@ -19,6 +20,30 @@ let
   dataDir = "/home/awfixer/.od";
   user = "awfixer";
   group = "users";
+
+  seedPrefs = pkgs.writeText "open-design-seed-prefs.py" ''
+    import json
+    from pathlib import Path
+    p = Path(${builtins.toJSON dataDir}) / "app-config.json"
+    data = {}
+    if p.exists():
+        try:
+            data = json.loads(p.read_text())
+        except Exception:
+            data = {}
+    changed = False
+    if not data.get("agentId"):
+        data["agentId"] = "grok-build"
+        changed = True
+    models = data.setdefault("agentModels", {})
+    gb = models.setdefault("grok-build", {})
+    if not gb.get("model"):
+        gb["model"] = "grok-4.6"
+        changed = True
+    if changed:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(data, indent=2) + "\n")
+  '';
 
   # Same SSE contract as upstream nix/nixos.nix: no gzip on /api/*,
   # flush_interval -1, long timeouts. Bind loopback; Host must be
@@ -60,6 +85,7 @@ let
   # systemd system units start with a tiny PATH. The daemon finds
   # claude/codex/… by scanning PATH at runtime.
   daemonPath = lib.concatStringsSep ":" [
+    "${vela}/bin"
     "/run/wrappers/bin"
     "/etc/profiles/per-user/${user}/bin"
     "/run/current-system/sw/bin"
@@ -74,7 +100,10 @@ in
   # /etc/hosts wins over Avahi: NixOS prepends `files` in nsswitch, so
   # this does not fight Spotify's nssmdns4. Do not avahi-publish
   # 127.0.0.1 — LAN clients would resolve the name to themselves.
-  environment.systemPackages = [ daemon ];
+  environment.systemPackages = [
+    daemon
+    vela
+  ];
 
   networking.hosts.${listenHost} = [ publicHost ];
 
@@ -94,12 +123,19 @@ in
       OD_WEB_PORT = toString webPort;
       OD_ALLOWED_ORIGINS = publicOrigin;
       PATH = lib.mkForce daemonPath;
+      # Login / AMR Cloud (`vela login`) — not the Grok Build agent.
+      VELA_BIN = lib.getExe vela;
+      VELA_OPENCODE_BIN = "${vela}/bin/libexec/opencode/opencode";
+      # So `vela login` can open Helium from this system unit.
+      BROWSER = lib.getExe pkgs.helium-browser;
+      XDG_RUNTIME_DIR = "/run/user/1000";
     };
 
     serviceConfig = {
       Type = "simple";
       User = user;
       Group = group;
+      ExecStartPre = "${pkgs.python3}/bin/python3 ${seedPrefs}";
       ExecStart = "${lib.getExe daemon} --port ${toString daemonPort} --no-open";
       Restart = "on-failure";
       RestartSec = 3;

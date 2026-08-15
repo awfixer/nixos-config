@@ -1,5 +1,7 @@
 const BACKOFF_MS = [500, 1000, 2000, 5000, 10000];
-const RESTRICTED_URL = /^(chrome|helium|about|devtools|chrome-extension):/;
+// Helium serves chrome internals as helium://. chrome:// still appears on
+// some tabs and the debugger API still rejects them as chrome://.
+const RESTRICTED_URL = /^(helium|chrome|about|devtools|chrome-extension):/;
 
 function isRestrictedUrl(url) {
   if (url === "about:blank" || url === "about:srcdoc") return false;
@@ -73,7 +75,11 @@ function attachTab(tabId) {
       }
       chrome.debugger.attach({ tabId }, "1.3", () => {
         if (chrome.runtime.lastError) {
-          reject(new Error(`attach_refused: ${chrome.runtime.lastError.message}`));
+          let msg = chrome.runtime.lastError.message || "attach failed";
+          if (/chrome:\/\//i.test(msg)) {
+            msg = msg.replace(/chrome:\/\//gi, "helium://");
+          }
+          reject(new Error(`attach_refused: ${msg}`));
           return;
         }
         resolve({ attached: true });
@@ -95,15 +101,20 @@ function sendCommand(tabId, method, params) {
 }
 
 async function evalInPage(tabId, expression) {
-  const results = await chrome.scripting.executeScript({
-    target: { tabId },
-    world: "MAIN",
-    args: [expression],
-    func: (expr) => {
-      return eval(expr);
-    },
+  await attachTab(tabId);
+  const raw = await sendCommand(tabId, "Runtime.evaluate", {
+    expression,
+    returnByValue: true,
+    awaitPromise: true,
   });
-  return { result: results && results[0] ? results[0].result : undefined };
+  if (raw && raw.exceptionDetails) {
+    const details = raw.exceptionDetails;
+    const exc = details.exception || {};
+    const text = exc.description || details.text || "eval exception";
+    throw new Error(`eval_failed: ${text}`);
+  }
+  const result = (raw && raw.result) || {};
+  return { result: result.value, type: result.type };
 }
 
 async function setRequestIntercept(payload) {
@@ -131,8 +142,26 @@ async function runOp(op, payload) {
     case "send_command":
       return sendCommand(payload.tabId, payload.method, payload.params);
     case "create_tab": {
-      const tab = await chrome.tabs.create({ url: payload.url });
-      return { tab: serializeTab(tab) };
+      const tab = await chrome.tabs.create({ url: payload.url || "about:blank" });
+      if (tab.status === "complete") {
+        return { tab: serializeTab(tab) };
+      }
+      const finished = await new Promise((resolve) => {
+        const tabId = tab.id;
+        const timer = setTimeout(() => {
+          chrome.tabs.onUpdated.removeListener(onUpdated);
+          chrome.tabs.get(tabId, (latest) => resolve(latest || tab));
+        }, 8000);
+        function onUpdated(updatedId, change, updated) {
+          if (updatedId === tabId && change.status === "complete") {
+            clearTimeout(timer);
+            chrome.tabs.onUpdated.removeListener(onUpdated);
+            resolve(updated);
+          }
+        }
+        chrome.tabs.onUpdated.addListener(onUpdated);
+      });
+      return { tab: serializeTab(finished) };
     }
     case "close_tab":
       await chrome.tabs.remove(payload.tabId);
@@ -141,7 +170,7 @@ async function runOp(op, payload) {
       await chrome.tabs.update(payload.tabId, { active: true });
       return {};
     case "list_extensions":
-      return chrome.management.getAll();
+      return { extensions: await chrome.management.getAll() };
     case "set_extension_enabled":
       await chrome.management.setEnabled(payload.id, payload.enabled);
       return { id: payload.id, enabled: payload.enabled };
@@ -243,19 +272,51 @@ function emitTabEvent(kind, tab) {
   send({ type: "tab_event", kind, tab });
 }
 
+async function ensureOffscreen() {
+  if (!chrome.offscreen || !chrome.runtime.getContexts) return;
+  const existing = await chrome.runtime.getContexts({
+    contextTypes: ["OFFSCREEN_DOCUMENT"],
+  });
+  if (existing && existing.length) return;
+  await chrome.offscreen.createDocument({
+    url: "offscreen.html",
+    reasons: ["WORKERS"],
+    justification: "Keep the Helium DevTools bridge WebSocket alive",
+  });
+}
+
+function armAlarm() {
+  if (!chrome.alarms) return;
+  chrome.alarms.create("helium-devtools-bridge", { periodInMinutes: 0.5 });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
+  ensureOffscreen().catch(() => {});
+  armAlarm();
   connectBridge();
 });
 chrome.runtime.onStartup.addListener(() => {
+  ensureOffscreen().catch(() => {});
+  armAlarm();
   connectBridge();
 });
 chrome.runtime.onConnect.addListener(() => {
   connectBridge();
 });
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (!msg || msg.type !== "status") return;
+  if (!msg) return;
+  if (msg.type === "keepalive") {
+    connectBridge();
+    return;
+  }
+  if (msg.type !== "status") return;
   sendResponse({ connected: isConnected(), lastError });
 });
+if (chrome.alarms) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "helium-devtools-bridge") connectBridge();
+  });
+}
 
 chrome.tabs.onCreated.addListener((tab) => {
   emitTabEvent("created", serializeTab(tab));
@@ -287,4 +348,6 @@ if (chrome.storage && chrome.storage.session) {
   });
 }
 
+ensureOffscreen().catch(() => {});
+armAlarm();
 connectBridge();

@@ -16,13 +16,17 @@ Drive the daily Helium window through the local `helium-devtools` MCP (`http://1
 
 ## Procedure
 
-1. Call `helium_status` first.
-2. If `connected` is false, tell the user to open Helium, or fully quit and reopen it so `--load-extension` picks up `~/.local/share/helium-devtools/extension`. Do not launch Chrome, TinyFish, or a second Helium unless the user asks.
-3. Prefer proxied `chrome-devtools-mcp` tools for navigation, DOM, console, network, performance, screenshots.
-4. Use `helium_list_extensions`, `helium_set_extension_enabled`, `helium_get_cookies`, `helium_set_request_intercept`, `helium_eval` for extras those tools do not cover.
-5. Never pass `--user-data-dir`. Never start a second Helium.
+1. Call `helium_status` first. Attach path is the loopback CDP shim (`attachPath: shim`), not native Helium inspect. Do not tell the user to open `helium://inspect` or click Allow.
+2. Call `helium_list_tabs` second. Do **not** call `list_pages` if every URL is `helium://`, `chrome://`, `about:` (except `about:blank`), or `devtools://`.
+3. If there is no normal page, call `helium_new_tab` with `about:blank` or the user URL, then wait until `helium_list_tabs` shows a non-empty url.
+4. Then use proxied DevTools tools (`select_page`, `take_snapshot`, `click`, `fill`, `type_text`, `list_console_messages`, `list_network_requests`). Treat a `tool_timeout:` string as failure — do not retry in a tight loop.
+5. `helium_eval` uses CDP `Runtime.evaluate`. A CSP failure is `eval_failed: …`, never a silent `{result: null}`. Prefer `evaluate_script` for page automation when it exists.
+6. Use `helium_list_extensions` / `helium_set_extension_enabled` / `helium_get_cookies` / `helium_set_request_intercept` for extras.
+7. Never launch a second Helium. Never pass `--user-data-dir` or `--remote-debugging-port`. Never use TinyFish for the daily window.
 
 ## Errors
 
-- `helium_disconnected` — Helium or the extension is down. Quote the message. Stop.
-- `attach_refused:` — debugger permission or restricted URL (`chrome://`, `helium://`, `about:`, `devtools://`). Do not retry attach in a loop.
+- `helium_disconnected` — extras extension is down. Quote the message. Fully quit and reopen Helium.
+- `attach_refused:` — restricted URL (`helium://`, `chrome://`, `about:`, `devtools://`). Open `helium_new_tab` instead. Do not retry attach in a loop.
+- `tool_timeout:` — chrome-devtools-mcp exceeded 12s. Report it. Do not hang the turn.
+- `eval_failed:` — loud eval error (often CSP). Use DevTools `evaluate_script` or attach+Runtime.evaluate details.

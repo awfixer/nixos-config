@@ -8,21 +8,23 @@ Install is via this NixOS flake only (Home Manager drops `~/.grok/plugins/helium
 
 After `nixos-rebuild` / `home-manager switch`:
 
-1. Fully quit Helium once, then reopen it so `--load-extension` picks up `~/.local/share/helium-devtools/extension`.
-2. Start the bridge if needed:
+1. Fully quit Helium once, then reopen it so `--load-extension` and `--silent-debugger-extension-api` take effect. Do **not** pass `--remote-debugging-port` and do **not** use `--autoConnect` / `helium://inspect` for the agent. chrome-devtools-mcp attaches to the loopback shim at `http://127.0.0.1:9222` so Helium does not show the “controlled by automated test software” bar or an Allow-debugging prompt.
+2. Restart the bridge:
 
    ```bash
-   systemctl --user start helium-devtools
+   systemctl --user restart helium-devtools
    ```
 
-3. Confirm the CDP shim and Grok MCP wiring:
+3. In Grok, Plugins → enable **`helium-devtools`** (the folder plugin under `~/.grok/plugins/`, not `user/<hash>/helium-devtools`) → press `r` or start a new session. `grok plugin list` only shows marketplace installs; `grok inspect` is the truth.
+
+4. Smoke without Grok:
 
    ```bash
-   curl -sS http://127.0.0.1:9222/json/version
-   grok mcp doctor helium-devtools
+   curl -sS -m 8 -H 'Accept: application/json, text/event-stream' \
+     -H 'Content-Type: application/json' \
+     -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"helium_status","arguments":{}}}' \
+     http://127.0.0.1:17321/mcp
    ```
-
-4. In Grok, open the Plugins tab and press `r` to reload plugins.
 
 ## Security
 

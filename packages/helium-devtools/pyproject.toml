@@ -6,6 +6,7 @@ dependencies = ["aiohttp", "mcp<2"]
 
 [project.scripts]
 helium-devtools = "helium_devtools.__main__:main"
+helium-devtools-seed-remote-debugging = "helium_devtools.helium_profile:main_seed"
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -4,6 +4,7 @@ import pytest
 
 from helium_devtools.config import Config
 from helium_devtools.errors import HELIUM_DISCONNECTED, HeliumDisconnectedError
+from helium_devtools.mcp_agg import child_argv
 from helium_devtools.token import read_token
 
 
@@ -47,3 +48,16 @@ def test_config_from_env_reads_ports_and_token(tmp_path: Path):
     assert cfg.mcp_port == 17321
     assert cfg.cdp_port == 9222
     assert cfg.cdp_mcp.endswith("chrome-devtools-mcp")
+
+
+def test_child_argv_uses_shim_browser_url():
+    cmd, args = child_argv("/bin/fake-mcp", "http://127.0.0.1:9222")
+    assert cmd == "/bin/fake-mcp"
+    assert args == [
+        "--browser-url",
+        "http://127.0.0.1:9222",
+        "--no-usage-statistics",
+    ]
+    assert "--autoConnect" not in args
+    assert "--executable-path" not in args
+    assert "--user-data-dir" not in args

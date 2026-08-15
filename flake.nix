@@ -55,6 +55,7 @@
           buzz = pkgs.callPackage ./packages/buzz { };
           gloomberb = pkgs.callPackage ./packages/gloomberb { };
           openwork = pkgs.callPackage ./packages/openwork { };
+          vela-cli = pkgs.callPackage ./packages/vela { };
           open-design-daemon = open-design.packages.${system}.daemon;
           open-design-web = open-design.packages.${system}.web;
           #orion-browser = pkgs.callPackage ./packages/orion { };

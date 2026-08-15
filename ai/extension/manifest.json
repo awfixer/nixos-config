@@ -18,7 +18,9 @@
     "management",
     "cookies",
     "storage",
-    "webRequest"
+    "webRequest",
+    "offscreen",
+    "alarms"
   ],
   "host_permissions": ["<all_urls>"]
 }

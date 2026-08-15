@@ -12,9 +12,21 @@ from mcp.server.fastmcp import FastMCP
 from helium_devtools.ext_hub import ExtHub
 from helium_devtools import extra_tools
 
+CHILD_TOOL_TIMEOUT_S = 12.0
 
-def child_argv(cdp_mcp: str) -> tuple[str, list[str]]:
-    return cdp_mcp, ["--browser-url", "http://127.0.0.1:9222", "--no-usage-statistics"]
+
+def child_argv(cdp_mcp: str, cdp_url: str = "http://127.0.0.1:9222") -> tuple[str, list[str]]:
+    """Attach chrome-devtools-mcp to the loopback shim, never native inspect.
+
+    --autoConnect talks to Helium's inspect port, which paints the
+    "controlled by automated test software" bar and the allow-debug
+    prompt. The shim is Puppeteer-shaped HTTP /json on :9222.
+    """
+    return cdp_mcp, [
+        "--browser-url",
+        cdp_url,
+        "--no-usage-statistics",
+    ]
 
 
 def build_mcp(hub: ExtHub) -> FastMCP:
@@ -47,8 +59,13 @@ def build_mcp(hub: ExtHub) -> FastMCP:
 
     @mcp.tool()
     async def helium_eval(tabId: int, expression: str) -> dict[str, Any]:
-        """Evaluate JavaScript in a tab via chrome.scripting."""
+        """Evaluate JavaScript in a tab via CDP Runtime.evaluate."""
         return await extra_tools.helium_eval(hub, tabId, expression)
+
+    @mcp.tool()
+    async def helium_new_tab(url: str = "about:blank") -> dict[str, Any]:
+        """Open a tab in daily Helium. Use this before DevTools tools if every tab is helium:// or chrome://."""
+        return await extra_tools.helium_new_tab(hub, url)
 
     @mcp.tool()
     async def helium_set_request_intercept(
@@ -103,7 +120,12 @@ def _add_forwarded_tool(mcp: FastMCP, session: ClientSession, tool: Any) -> None
 
     async def _forward(**kwargs: Any) -> Any:
         payload = {k: v for k, v in kwargs.items() if v is not None}
-        result = await session.call_tool(name, payload)
+        try:
+            result = await asyncio.wait_for(
+                session.call_tool(name, payload), timeout=CHILD_TOOL_TIMEOUT_S
+            )
+        except TimeoutError:
+            return f"tool_timeout: {name} exceeded {CHILD_TOOL_TIMEOUT_S:.0f}s"
         if result.content:
             texts = [c.text for c in result.content if getattr(c, "text", None)]
             return texts[0] if len(texts) == 1 else texts
@@ -144,7 +166,7 @@ async def _exit_when_stdio_closes(read: Any) -> None:
                     break
             except Exception:
                 break
-        sys.exit(1)
+        return
     except asyncio.CancelledError:
         return
 

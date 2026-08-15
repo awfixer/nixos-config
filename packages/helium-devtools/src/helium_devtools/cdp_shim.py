@@ -154,10 +154,22 @@ def _tab_for(hub: ExtHub, tab_id: int) -> dict[str, Any]:
     return {"id": tab_id, "url": "", "title": ""}
 
 
+def is_restricted_url(url: str) -> bool:
+    """Helium internals are helium:// (chrome:// is the same surface)."""
+    if url in ("about:blank", "about:srcdoc", ""):
+        return False
+    return url.startswith(
+        ("helium:", "chrome:", "about:", "devtools:", "chrome-extension:")
+    )
+
+
 async def _ensure_attached(hub: ExtHub, client: _BrowserClient, tab_id: int) -> str:
     for sid, mapped in client.sessions.items():
         if mapped == tab_id:
             return sid
+    url = str(_tab_for(hub, tab_id).get("url") or "")
+    if is_restricted_url(url):
+        raise RuntimeError("attach_refused: restricted_url")
     await hub.rpc("attach", {"tabId": tab_id, "protocolVersion": "1.3"})
     sid = uuid.uuid4().hex
     client.sessions[sid] = tab_id
@@ -281,6 +293,8 @@ async def start_cdp(hub: ExtHub, bind: str, port: int) -> CdpServer:
                         await client.send({"id": req_id, "result": {}})
                         if client.auto_attach:
                             for tab in list(srv.hub.tabs):
+                                if is_restricted_url(str(tab.get("url") or "")):
+                                    continue
                                 try:
                                     sid = await _ensure_attached(
                                         srv.hub, client, int(tab["id"])
