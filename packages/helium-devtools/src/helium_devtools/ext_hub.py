@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import uuid
 from typing import Any
@@ -63,7 +64,7 @@ class ExtHub:
             self._tabs[tid] = tab
             self._tab_owner[tid] = sock_id
 
-    async def rpc(self, op: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def rpc(self, op: str, payload: dict[str, Any] | None = None) -> Any:
         if not self._sockets:
             raise HeliumDisconnectedError()
         payload = payload or {}
@@ -85,14 +86,23 @@ class ExtHub:
             self._attached.add(int(payload["tabId"]))
         if op == "detach" and payload.get("tabId") is not None:
             self._attached.discard(int(payload["tabId"]))
-        return reply.get("result") or {}
+        result = reply.get("result")
+        return {} if result is None else result
 
     def _pick_socket(self, tab_id: Any) -> web.WebSocketResponse:
         if tab_id is not None:
             owner = self._tab_owner.get(int(tab_id))
             if owner is not None and owner in self._sockets:
                 return self._sockets[owner]
+            raise RuntimeError("unknown_tab")
         return next(iter(self._sockets.values()))
+
+    async def _dispatch(self, handler: Any, *args: Any) -> None:
+        if handler is None:
+            return
+        out = handler(*args)
+        if inspect.isawaitable(out):
+            await out
 
     async def _ws_handler(self, request: web.Request) -> web.WebSocketResponse:
         ws = web.WebSocketResponse()
@@ -136,14 +146,13 @@ class ExtHub:
                         self._attached.discard(tid)
                     elif tab.get("id") is not None:
                         self._ingest_tabs(sock_id, [tab])
+                    await self._dispatch(getattr(self, "_tab_event_handler", None), event, tab)
                 elif kind == "reply":
                     fut = self._pending.pop(payload.get("id"), None)
                     if fut and not fut.done():
                         fut.set_result(payload)
                 elif kind == "cdp_event":
-                    handler = getattr(self, "_cdp_event_handler", None)
-                    if handler:
-                        handler(payload)
+                    await self._dispatch(getattr(self, "_cdp_event_handler", None), payload)
         finally:
             self._sockets.pop(sock_id, None)
             dead = [tid for tid, owner in self._tab_owner.items() if owner == sock_id]

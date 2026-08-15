@@ -159,3 +159,75 @@ async def test_rpc_timeout_clears_pending():
                 assert hub._pending == {}
     finally:
         await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_rpc_empty_list_result_stays_list():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ws:
+                await ws.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ws.receive_json()
+
+                async def responder() -> None:
+                    while True:
+                        msg = await ws.receive_json()
+                        if msg.get("type") != "cmd":
+                            continue
+                        if msg["op"] == "list_extensions":
+                            await ws.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": []}
+                            )
+
+                task = asyncio.create_task(responder())
+                listed = await hub.rpc("list_extensions")
+                assert listed == []
+                task.cancel()
+    finally:
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_rpc_unknown_tab_does_not_fallback():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    tab = {
+        "id": 3,
+        "windowId": 1,
+        "url": "https://example.com/",
+        "title": "Example",
+        "active": True,
+        "status": "complete",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ws:
+                await ws.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ws.receive_json()
+                await ws.send_json({"type": "tabs_snapshot", "tabs": [tab]})
+                await asyncio.sleep(0.05)
+                got_cmds: list[dict] = []
+
+                async def responder() -> None:
+                    while True:
+                        msg = await ws.receive_json()
+                        if msg.get("type") != "cmd":
+                            continue
+                        got_cmds.append(msg)
+                        await ws.send_json(
+                            {"type": "reply", "id": msg["id"], "ok": True, "result": {}}
+                        )
+
+                task = asyncio.create_task(responder())
+                with pytest.raises(RuntimeError, match="unknown_tab"):
+                    await hub.rpc(
+                        "send_command",
+                        {"tabId": 99, "method": "Runtime.evaluate", "params": {}},
+                    )
+                await asyncio.sleep(0.05)
+                assert got_cmds == []
+                task.cancel()
+    finally:
+        await hub.stop()

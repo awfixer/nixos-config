@@ -193,3 +193,248 @@ async def test_attach_refused_is_jsonrpc_minus_32000_without_retry():
     finally:
         await cdp.stop()
         await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_puppeteer_handshake_get_browser_contexts_and_set_auto_attach():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    cdp = await start_cdp(hub, "127.0.0.1", 0)
+    tab = {
+        "id": 7,
+        "windowId": 1,
+        "url": "https://example.com/",
+        "title": "Example",
+        "active": True,
+        "status": "complete",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ext:
+                await ext.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ext.receive_json()
+                await ext.send_json({"type": "tabs_snapshot", "tabs": [tab]})
+
+                async def ext_loop() -> None:
+                    while True:
+                        msg = await ext.receive_json()
+                        if msg.get("type") != "cmd":
+                            continue
+                        if msg["op"] == "attach":
+                            await ext.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": {"attached": True}}
+                            )
+                        elif msg["op"] == "send_command":
+                            await ext.send_json(
+                                {
+                                    "type": "reply",
+                                    "id": msg["id"],
+                                    "ok": True,
+                                    "result": {"result": {"type": "string", "value": "Example"}},
+                                }
+                            )
+                        elif msg["op"] == "detach":
+                            await ext.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": {}}
+                            )
+
+                ext_task = asyncio.create_task(ext_loop())
+                await asyncio.sleep(0.05)
+                ver = await (await session.get(f"{cdp.base_url}/json/version")).json()
+                async with session.ws_connect(ver["webSocketDebuggerUrl"]) as browser:
+                    await browser.send_json({"id": 1, "method": "Target.getBrowserContexts", "params": {}})
+                    ctx = await browser.receive_json()
+                    assert ctx["id"] == 1
+                    assert ctx["result"]["browserContextIds"] == []
+
+                    await browser.send_json(
+                        {
+                            "id": 2,
+                            "method": "Target.setAutoAttach",
+                            "params": {
+                                "autoAttach": True,
+                                "flatten": True,
+                                "waitForDebuggerOnStart": False,
+                            },
+                        }
+                    )
+                    msgs: list[dict] = []
+                    while not (
+                        any(m.get("id") == 2 for m in msgs)
+                        and any(m.get("method") == "Target.attachedToTarget" for m in msgs)
+                    ):
+                        msgs.append(await asyncio.wait_for(browser.receive_json(), timeout=2))
+                    result = next(m for m in msgs if m.get("id") == 2)
+                    assert result["result"] == {}
+                    attached = next(m for m in msgs if m.get("method") == "Target.attachedToTarget")
+                    assert attached["params"]["targetInfo"]["targetId"] == "tab-7"
+                    assert attached["params"]["targetInfo"]["type"] == "page"
+                    session_id = attached["params"]["sessionId"]
+
+                    await browser.send_json({"id": 3, "method": "Browser.getVersion", "params": {}})
+                    unknown = await browser.receive_json()
+                    while unknown.get("id") != 3:
+                        unknown = await browser.receive_json()
+                    assert unknown["error"]["code"] == -32601
+
+                    await browser.send_json(
+                        {
+                            "id": 4,
+                            "sessionId": session_id,
+                            "method": "Runtime.evaluate",
+                            "params": {"expression": "document.title"},
+                        }
+                    )
+                    ev = await browser.receive_json()
+                    while ev.get("id") != 4:
+                        ev = await browser.receive_json()
+                    assert ev["result"]["result"]["value"] == "Example"
+                    assert ev.get("sessionId") == session_id
+                for _ in range(50):
+                    if not hub.attached:
+                        break
+                    await asyncio.sleep(0.01)
+                ext_task.cancel()
+    finally:
+        await cdp.stop()
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_cdp_event_is_forwarded_on_browser_ws_with_session_id():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    cdp = await start_cdp(hub, "127.0.0.1", 0)
+    tab = {
+        "id": 7,
+        "windowId": 1,
+        "url": "https://example.com/",
+        "title": "Example",
+        "active": True,
+        "status": "complete",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ext:
+                await ext.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ext.receive_json()
+                await ext.send_json({"type": "tabs_snapshot", "tabs": [tab]})
+
+                async def ext_loop() -> None:
+                    while True:
+                        msg = await ext.receive_json()
+                        if msg.get("type") != "cmd":
+                            continue
+                        if msg["op"] == "attach":
+                            await ext.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": {"attached": True}}
+                            )
+                        elif msg["op"] == "detach":
+                            await ext.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": {}}
+                            )
+
+                ext_task = asyncio.create_task(ext_loop())
+                await asyncio.sleep(0.05)
+                ver = await (await session.get(f"{cdp.base_url}/json/version")).json()
+                async with session.ws_connect(ver["webSocketDebuggerUrl"]) as browser:
+                    await browser.send_json(
+                        {
+                            "id": 1,
+                            "method": "Target.attachToTarget",
+                            "params": {"targetId": "tab-7", "flatten": True},
+                        }
+                    )
+                    msgs = [await browser.receive_json()]
+                    while not any(m.get("id") == 1 for m in msgs):
+                        msgs.append(await browser.receive_json())
+                    session_id = next(m for m in msgs if m.get("id") == 1)["result"]["sessionId"]
+                    await ext.send_json(
+                        {
+                            "type": "cdp_event",
+                            "tabId": 7,
+                            "method": "Network.requestWillBeSent",
+                            "params": {"requestId": "r1", "request": {"url": "https://example.com/"}},
+                        }
+                    )
+                    ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    while ev.get("method") != "Network.requestWillBeSent":
+                        ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    assert ev["sessionId"] == session_id
+                    assert ev["params"]["requestId"] == "r1"
+                    assert "tabId" not in ev
+                ext_task.cancel()
+    finally:
+        await cdp.stop()
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_tab_events_emit_target_lifecycle_on_browser_ws():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    cdp = await start_cdp(hub, "127.0.0.1", 0)
+    tab = {
+        "id": 7,
+        "windowId": 1,
+        "url": "https://example.com/",
+        "title": "Example",
+        "active": True,
+        "status": "complete",
+    }
+    created = {
+        "id": 8,
+        "windowId": 1,
+        "url": "https://example.org/",
+        "title": "Org",
+        "active": False,
+        "status": "complete",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ext:
+                await ext.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ext.receive_json()
+                await ext.send_json({"type": "tabs_snapshot", "tabs": [tab]})
+                await asyncio.sleep(0.05)
+                ver = await (await session.get(f"{cdp.base_url}/json/version")).json()
+                async with session.ws_connect(ver["webSocketDebuggerUrl"]) as browser:
+                    await browser.send_json(
+                        {"id": 1, "method": "Target.setDiscoverTargets", "params": {"discover": True}}
+                    )
+                    msgs = [await browser.receive_json()]
+                    while not (
+                        any(m.get("id") == 1 for m in msgs)
+                        and any(
+                            m.get("method") == "Target.targetCreated"
+                            and m.get("params", {}).get("targetInfo", {}).get("targetId") == "tab-7"
+                            for m in msgs
+                        )
+                    ):
+                        msgs.append(await asyncio.wait_for(browser.receive_json(), timeout=2))
+
+                    await ext.send_json({"type": "tab_event", "kind": "created", "tab": created})
+                    ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    while ev.get("method") != "Target.targetCreated":
+                        ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    assert ev["params"]["targetInfo"]["targetId"] == "tab-8"
+                    assert ev["params"]["targetInfo"]["url"] == "https://example.org/"
+
+                    updated = {**created, "title": "Org Updated"}
+                    await ext.send_json({"type": "tab_event", "kind": "updated", "tab": updated})
+                    ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    while ev.get("method") != "Target.targetInfoChanged":
+                        ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    assert ev["params"]["targetInfo"]["targetId"] == "tab-8"
+                    assert ev["params"]["targetInfo"]["title"] == "Org Updated"
+
+                    await ext.send_json(
+                        {"type": "tab_event", "kind": "removed", "tab": {"id": 8, "windowId": 1}}
+                    )
+                    ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    while ev.get("method") != "Target.targetDestroyed":
+                        ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                    assert ev["params"]["targetId"] == "tab-8"
+    finally:
+        await cdp.stop()
+        await hub.stop()
