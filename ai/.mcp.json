@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "helium-devtools": {
+      "type": "http",
+      "url": "http://127.0.0.1:17321/mcp",
+      "note": "User systemd unit helium-devtools.service. Official chrome-devtools-mcp tools plus helium_* extras. Requires Helium with the Grok Helium DevTools extension loaded."
+    }
+  }
+}

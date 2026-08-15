@@ -1,0 +1,7 @@
+{
+  "name": "helium-devtools",
+  "version": "0.1.0",
+  "description": "Connect Grok to the already-open daily Helium via the local helium-devtools MCP (DevTools, extensions, cookies, page automation).",
+  "author": { "name": "awfixer" },
+  "keywords": ["helium", "devtools", "cdp", "browser", "mcp"]
+}
