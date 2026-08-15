@@ -1,5 +1,10 @@
 const BACKOFF_MS = [500, 1000, 2000, 5000, 10000];
-const RESTRICTED_URL = /^(chrome|helium|about|devtools):/;
+const RESTRICTED_URL = /^(chrome|helium|about|devtools|chrome-extension):/;
+
+function isRestrictedUrl(url) {
+  if (url === "about:blank" || url === "about:srcdoc") return false;
+  return RESTRICTED_URL.test(url || "");
+}
 
 let ws = null;
 let lastError = "";
@@ -62,7 +67,7 @@ function attachTab(tabId) {
         return;
       }
       const url = (tab && tab.url) || "";
-      if (RESTRICTED_URL.test(url)) {
+      if (isRestrictedUrl(url)) {
         reject(new Error("attach_refused: restricted_url"));
         return;
       }

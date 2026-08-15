@@ -6,16 +6,10 @@
 }:
 
 let
-  extRel = "helium-devtools/extension";
   tokenPath = "${config.xdg.dataHome}/helium-devtools/token";
 in
 {
   home.packages = [ pkgs.helium-devtools ];
-
-  xdg.dataFile."${extRel}/manifest.json".source = ../ai/extension/manifest.json;
-  xdg.dataFile."${extRel}/background.js".source = ../ai/extension/background.js;
-  xdg.dataFile."${extRel}/popup.html".source = ../ai/extension/popup.html;
-  xdg.dataFile."${extRel}/popup.js".source = ../ai/extension/popup.js;
 
   home.file.".grok/plugins/helium-devtools".source = ../ai;
 
@@ -23,6 +17,11 @@ in
     dir="${config.xdg.dataHome}/helium-devtools"
     mkdir -p "$dir/extension"
     chmod 700 "$dir" "$dir/extension"
+    # Real files next to config.json; store symlinks break --load-extension.
+    install -m 644 ${../ai/extension/manifest.json} "$dir/extension/manifest.json"
+    install -m 644 ${../ai/extension/background.js} "$dir/extension/background.js"
+    install -m 644 ${../ai/extension/popup.html} "$dir/extension/popup.html"
+    install -m 644 ${../ai/extension/popup.js} "$dir/extension/popup.js"
     if [ ! -f "$dir/token" ]; then
       ${pkgs.openssl}/bin/openssl rand -hex 32 > "$dir/token"
       chmod 600 "$dir/token"
