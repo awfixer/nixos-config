@@ -4,6 +4,7 @@
   nixpkgs.overlays = [
     (final: prev: {
       helium-browser = final.callPackage ../packages/helium { };
+      helium-devtools = final.callPackage ../packages/helium-devtools { };
       buzz = final.callPackage ../packages/buzz { };
       gloomberb = final.callPackage ../packages/gloomberb { };
       #orion-browser = final.callPackage ../packages/orion { };

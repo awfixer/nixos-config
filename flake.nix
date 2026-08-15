@@ -45,6 +45,7 @@
       packages = {
         ${system} = {
           helium-browser = pkgs.callPackage ./packages/helium { };
+          helium-devtools = pkgs.callPackage ./packages/helium-devtools { };
           buzz = pkgs.callPackage ./packages/buzz { };
           gloomberb = pkgs.callPackage ./packages/gloomberb { };
           #orion-browser = pkgs.callPackage ./packages/orion { };
