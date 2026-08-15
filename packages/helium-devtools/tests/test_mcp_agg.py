@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from pathlib import Path
 
@@ -56,4 +57,60 @@ async def test_child_tool_is_forwarded():
         text = result if isinstance(result, str) else str(result)
         assert "navigated:https://example.com/" in text
     finally:
+        watch = getattr(mcp, "_child_watch", None)
+        if watch is not None:
+            watch.cancel()
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_child_death_exits_parent(tmp_path, monkeypatch):
+    script = tmp_path / "die_stdio_mcp.py"
+    script.write_text(
+        """
+import os
+import threading
+import time
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("die-cdp")
+
+
+@mcp.tool()
+def ping() -> str:
+    return "pong"
+
+
+def _die() -> None:
+    time.sleep(0.3)
+    os._exit(0)
+
+
+if __name__ == "__main__":
+    threading.Thread(target=_die, daemon=True).start()
+    mcp.run(transport="stdio")
+"""
+    )
+    exits: list[int] = []
+
+    def fake_exit(code: int = 0) -> None:
+        exits.append(code)
+
+    monkeypatch.setattr("helium_devtools.mcp_agg.sys.exit", fake_exit)
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    try:
+        mcp = build_mcp(hub)
+        await attach_child_tools(mcp, sys.executable, [str(script)])
+        for _ in range(50):
+            if exits:
+                break
+            await asyncio.sleep(0.1)
+        assert exits == [1]
+        assert getattr(mcp, "_child_watch", None) is not None
+    finally:
+        watch = getattr(mcp, "_child_watch", None)
+        if watch is not None:
+            watch.cancel()
         await hub.stop()

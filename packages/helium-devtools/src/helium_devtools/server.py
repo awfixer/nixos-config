@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import signal
 import socket
+import sys
 from dataclasses import dataclass
 
 import uvicorn
@@ -38,6 +40,10 @@ async def _wait_http_bound(server: uvicorn.Server, http_task: asyncio.Task[None]
             raise exc
 
 
+def _noop_signal(_signum: int, _frame: object) -> None:
+    return None
+
+
 async def serve(cfg: Config) -> None:
     global running
     hub = ExtHub(cfg.token)
@@ -46,6 +52,8 @@ async def serve(cfg: Config) -> None:
     http_task: asyncio.Task[None] | None = None
     uv_server: uvicorn.Server | None = None
     mcp_sock: socket.socket | None = None
+    child_watch: asyncio.Task[None] | None = None
+    prev_term = signal.getsignal(signal.SIGTERM)
     try:
         cdp = await start_cdp(hub, cfg.bind, cfg.cdp_port)
         running = ServeHandle(
@@ -60,6 +68,7 @@ async def serve(cfg: Config) -> None:
         if cfg.cdp_mcp:
             cmd, args = child_argv(cfg.cdp_mcp)
             await attach_child_tools(mcp, cmd, args)
+            child_watch = getattr(mcp, "_child_watch", None)
         # Bind here so EADDRINUSE is OSError; uvicorn.Server.startup sys.exit()s instead.
         mcp_sock = _bind_tcp(cfg.bind, mcp.settings.port)
         bound = int(mcp_sock.getsockname()[1])
@@ -68,10 +77,24 @@ async def serve(cfg: Config) -> None:
         app = mcp.streamable_http_app()
         uv_config = uvicorn.Config(app, host=cfg.bind, port=bound, log_level="warning")
         uv_server = uvicorn.Server(uv_config)
+        # uvicorn 0.51 swallows SIGTERM into should_exit then re-raises it after
+        # serve() returns. Keep a no-op so that re-raise does not kill us before finally.
+        signal.signal(signal.SIGTERM, _noop_signal)
         http_task = asyncio.create_task(uv_server.serve(sockets=[mcp_sock]))
         await _wait_http_bound(uv_server, http_task)
-        await asyncio.Event().wait()
+        if child_watch is not None:
+            done, _pending = await asyncio.wait(
+                {http_task, child_watch},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if child_watch in done and not child_watch.cancelled():
+                sys.exit(1)
+        else:
+            await http_task
     finally:
+        signal.signal(signal.SIGTERM, prev_term)
+        if child_watch is not None:
+            child_watch.cancel()
         if uv_server is not None:
             uv_server.should_exit = True
         if http_task is not None:

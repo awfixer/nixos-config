@@ -63,3 +63,27 @@ async def test_serve_status_via_json_version(tmp_path):
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
+
+
+@pytest.mark.asyncio
+async def test_sigterm_stops_serve(tmp_path):
+    import os
+    import signal
+
+    from helium_devtools import server as server_mod
+
+    token = "ab" * 32
+    p = tmp_path / "token"
+    p.write_text(token)
+    cfg = Config(token=token, token_file=p, ext_port=0, mcp_port=0, cdp_port=0, cdp_mcp=None)
+    task = asyncio.create_task(serve(cfg))
+    for _ in range(50):
+        if server_mod.running is not None:
+            break
+        await asyncio.sleep(0.05)
+    assert server_mod.running is not None
+    # uvicorn.capture_signals is installed only after Server.serve starts.
+    await asyncio.sleep(0.2)
+    os.kill(os.getpid(), signal.SIGTERM)
+    await asyncio.wait_for(task, timeout=5)
+    assert server_mod.running is None

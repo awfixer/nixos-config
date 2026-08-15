@@ -132,6 +132,21 @@ async def attach_child_tools(mcp: FastMCP, command: str | None, args: list[str])
     mcp._child_stdio_cm = stdio_cm
     mcp._child_session_cm = session_cm
     mcp._child_session = session
+    mcp._child_watch = asyncio.create_task(_exit_when_stdio_closes(read))
+
+
+async def _exit_when_stdio_closes(read: Any) -> None:
+    try:
+        while True:
+            await asyncio.sleep(0.1)
+            try:
+                if read.statistics().open_send_streams == 0:
+                    break
+            except Exception:
+                break
+        sys.exit(1)
+    except asyncio.CancelledError:
+        return
 
 
 async def supervise_child(command: str, args: list[str]) -> None:
