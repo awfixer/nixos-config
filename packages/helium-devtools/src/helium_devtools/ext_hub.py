@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from typing import Any
 
 from aiohttp import WSMsgType, web
+
+from helium_devtools.errors import HeliumDisconnectedError
 
 log = logging.getLogger("helium_devtools.ext")
 
@@ -59,6 +62,34 @@ class ExtHub:
             tid = int(tab["id"])
             self._tabs[tid] = tab
             self._tab_owner[tid] = sock_id
+
+    async def rpc(self, op: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+        if not self._sockets:
+            raise HeliumDisconnectedError()
+        payload = payload or {}
+        req_id = str(uuid.uuid4())
+        loop = asyncio.get_running_loop()
+        fut: asyncio.Future[dict[str, Any]] = loop.create_future()
+        self._pending[req_id] = fut
+        sock = self._pick_socket(payload.get("tabId"))
+        await sock.send_json({"id": req_id, "type": "cmd", "op": op, "payload": payload})
+        reply = await asyncio.wait_for(fut, timeout=30)
+        if not reply.get("ok"):
+            err = str(reply.get("error") or "rpc_failed")
+            self.last_error = err
+            raise RuntimeError(err)
+        if op == "attach" and payload.get("tabId") is not None:
+            self._attached.add(int(payload["tabId"]))
+        if op == "detach" and payload.get("tabId") is not None:
+            self._attached.discard(int(payload["tabId"]))
+        return reply.get("result") or {}
+
+    def _pick_socket(self, tab_id: Any) -> web.WebSocketResponse:
+        if tab_id is not None:
+            owner = self._tab_owner.get(int(tab_id))
+            if owner is not None and owner in self._sockets:
+                return self._sockets[owner]
+        return next(iter(self._sockets.values()))
 
     async def _ws_handler(self, request: web.Request) -> web.WebSocketResponse:
         ws = web.WebSocketResponse()

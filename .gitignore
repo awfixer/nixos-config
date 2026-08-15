@@ -1,6 +1,9 @@
 node_modules
 
 **/result
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
 
 .worktrees/
 
