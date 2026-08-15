@@ -82,20 +82,9 @@ class CdpServer:
                     }
                 )
                 if client.auto_attach:
-                    try:
-                        sid = await _ensure_attached(self.hub, client, tid)
-                    except Exception:
-                        continue
-                    await client.send(
-                        {
-                            "method": "Target.attachedToTarget",
-                            "params": {
-                                "sessionId": sid,
-                                "targetInfo": _target_info(tab, attached=True),
-                                "waitingForDebugger": client.wait_for_debugger,
-                            },
-                        }
-                    )
+                    # Do not rpc() on the extension WS reader — it must
+                    # stay free to ingest the attach reply.
+                    asyncio.create_task(self._auto_attach_created(client, tab, tid))
             elif kind == "removed":
                 await client.send(
                     {
@@ -115,6 +104,24 @@ class CdpServer:
                         },
                     }
                 )
+
+    async def _auto_attach_created(
+        self, client: _BrowserClient, tab: dict[str, Any], tid: int
+    ) -> None:
+        try:
+            sid = await _ensure_attached(self.hub, client, tid)
+        except Exception:
+            return
+        await client.send(
+            {
+                "method": "Target.attachedToTarget",
+                "params": {
+                    "sessionId": sid,
+                    "targetInfo": _target_info(tab, attached=True),
+                    "waitingForDebugger": client.wait_for_debugger,
+                },
+            }
+        )
 
 
 def _page_entry(server: CdpServer, tab: dict[str, Any]) -> dict[str, Any]:

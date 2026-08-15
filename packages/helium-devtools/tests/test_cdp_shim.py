@@ -438,3 +438,104 @@ async def test_tab_events_emit_target_lifecycle_on_browser_ws():
     finally:
         await cdp.stop()
         await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_auto_attach_on_new_tab_does_not_deadlock_hub():
+    """Attach-on-create must not rpc() from the extension WS reader."""
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    cdp = await start_cdp(hub, "127.0.0.1", 0)
+    tab = {
+        "id": 7,
+        "windowId": 1,
+        "url": "https://example.com/",
+        "title": "Example",
+        "active": True,
+        "status": "complete",
+    }
+    created = {
+        "id": 8,
+        "windowId": 1,
+        "url": "https://example.org/",
+        "title": "Org",
+        "active": False,
+        "status": "complete",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ext:
+                await ext.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ext.receive_json()
+                await ext.send_json({"type": "tabs_snapshot", "tabs": [tab]})
+
+                async def ext_loop() -> None:
+                    while True:
+                        msg = await ext.receive_json()
+                        if msg.get("type") != "cmd":
+                            continue
+                        if msg["op"] == "attach":
+                            await ext.send_json(
+                                {
+                                    "type": "reply",
+                                    "id": msg["id"],
+                                    "ok": True,
+                                    "result": {"attached": True},
+                                }
+                            )
+                        elif msg["op"] == "detach":
+                            await ext.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": {}}
+                            )
+
+                ext_task = asyncio.create_task(ext_loop())
+                await asyncio.sleep(0.05)
+                ver = await (await session.get(f"{cdp.base_url}/json/version")).json()
+                async with session.ws_connect(ver["webSocketDebuggerUrl"]) as browser:
+                    await browser.send_json(
+                        {
+                            "id": 1,
+                            "method": "Target.setAutoAttach",
+                            "params": {
+                                "autoAttach": True,
+                                "flatten": True,
+                                "waitForDebuggerOnStart": False,
+                            },
+                        }
+                    )
+                    msgs: list[dict] = []
+                    while not (
+                        any(m.get("id") == 1 for m in msgs)
+                        and any(
+                            m.get("method") == "Target.attachedToTarget"
+                            and m.get("params", {}).get("targetInfo", {}).get("targetId") == "tab-7"
+                            for m in msgs
+                        )
+                    ):
+                        msgs.append(await asyncio.wait_for(browser.receive_json(), timeout=2))
+
+                    await ext.send_json({"type": "tab_event", "kind": "created", "tab": created})
+                    seen_created = False
+                    seen_attached = False
+                    deadline = asyncio.get_running_loop().time() + 2
+                    while asyncio.get_running_loop().time() < deadline and not (
+                        seen_created and seen_attached
+                    ):
+                        ev = await asyncio.wait_for(browser.receive_json(), timeout=2)
+                        if (
+                            ev.get("method") == "Target.targetCreated"
+                            and ev.get("params", {}).get("targetInfo", {}).get("targetId") == "tab-8"
+                        ):
+                            seen_created = True
+                        if (
+                            ev.get("method") == "Target.attachedToTarget"
+                            and ev.get("params", {}).get("targetInfo", {}).get("targetId") == "tab-8"
+                        ):
+                            seen_attached = True
+                    assert seen_created
+                    assert seen_attached
+                    assert 8 in hub.attached
+                ext_task.cancel()
+    finally:
+        await cdp.stop()
+        await hub.stop()

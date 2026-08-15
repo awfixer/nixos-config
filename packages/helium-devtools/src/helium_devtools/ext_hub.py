@@ -68,11 +68,11 @@ class ExtHub:
         if not self._sockets:
             raise HeliumDisconnectedError()
         payload = payload or {}
+        sock = self._pick_socket(payload.get("tabId"))
         req_id = str(uuid.uuid4())
         loop = asyncio.get_running_loop()
         fut: asyncio.Future[dict[str, Any]] = loop.create_future()
         self._pending[req_id] = fut
-        sock = self._pick_socket(payload.get("tabId"))
         await sock.send_json({"id": req_id, "type": "cmd", "op": op, "payload": payload})
         try:
             reply = await asyncio.wait_for(fut, timeout=30)

@@ -10,6 +10,7 @@
     ./hyprland.nix
     ./nixld.nix
     ./nixpkgs.nix
+    ./open-design.nix
     ./playwright-prisma.nix
     ./programs.nix
     ./security-keys.nix

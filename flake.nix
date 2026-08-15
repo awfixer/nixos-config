@@ -12,6 +12,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.7.0";
+    # Daemon + static web packages, not the Electron desktop (no Linux release).
+    open-design = {
+      url = "github:nexu-io/open-design";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -21,6 +26,7 @@
       home-manager,
       sops-nix,
       nix-flatpak,
+      open-design,
       ...
     }:
     let
@@ -48,6 +54,9 @@
           helium-devtools = pkgs.callPackage ./packages/helium-devtools { };
           buzz = pkgs.callPackage ./packages/buzz { };
           gloomberb = pkgs.callPackage ./packages/gloomberb { };
+          openwork = pkgs.callPackage ./packages/openwork { };
+          open-design-daemon = open-design.packages.${system}.daemon;
+          open-design-web = open-design.packages.${system}.web;
           #orion-browser = pkgs.callPackage ./packages/orion { };
           #zen-browser = pkgs.callPackage ./packages/zen-browser { };
           #windscribe = pkgs.callPackage ./packages/windscribe { };
@@ -83,6 +92,7 @@
           # Host lives under ./hosts/laptop (hardware + zram/swap are pure).
           laptop = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
+            specialArgs = { inherit open-design; };
             modules = [
               ./hosts/laptop
               home-manager.nixosModules.home-manager

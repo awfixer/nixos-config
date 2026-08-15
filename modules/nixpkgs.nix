@@ -7,6 +7,7 @@
       helium-devtools = final.callPackage ../packages/helium-devtools { };
       buzz = final.callPackage ../packages/buzz { };
       gloomberb = final.callPackage ../packages/gloomberb { };
+      openwork = final.callPackage ../packages/openwork { };
       #orion-browser = final.callPackage ../packages/orion { };
       #zen-browser = final.callPackage ../packages/zen-browser { };
       #windscribe = final.callPackage ../packages/windscribe { };

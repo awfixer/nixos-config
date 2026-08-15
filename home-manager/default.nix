@@ -49,6 +49,8 @@
     ./vesktop.nix
     ./buzz.nix
     ./gloomberb.nix
+    ./openwork.nix
+    ./open-design.nix
     #./orion.nix
     #./zen-browser.nix
     #./cursor.nix

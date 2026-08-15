@@ -13,11 +13,16 @@ in
 
   home.file.".grok/plugins/helium-devtools".source = ../ai;
 
-  home.activation.heliumDevtoolsToken = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.heliumDevtoolsToken = lib.hm.dag.entryAfter [ "writeBoundary" "linkGeneration" ] ''
     dir="${config.xdg.dataHome}/helium-devtools"
     mkdir -p "$dir/extension"
     chmod 700 "$dir" "$dir/extension"
-    # Real files next to config.json; store symlinks break --load-extension.
+    # Real files next to config.json. GNU install follows leftover
+    # store-symlinks into /nix/store (EROFS); remove dest first.
+    rm -f "$dir/extension/manifest.json" \
+      "$dir/extension/background.js" \
+      "$dir/extension/popup.html" \
+      "$dir/extension/popup.js"
     install -m 644 ${../ai/extension/manifest.json} "$dir/extension/manifest.json"
     install -m 644 ${../ai/extension/background.js} "$dir/extension/background.js"
     install -m 644 ${../ai/extension/popup.html} "$dir/extension/popup.html"
