@@ -82,6 +82,10 @@ async def test_target_get_attach_and_flattened_evaluate():
                                     "result": {"result": {"type": "string", "value": "Example"}},
                                 }
                             )
+                        elif msg["op"] == "detach":
+                            await ext.send_json(
+                                {"type": "reply", "id": msg["id"], "ok": True, "result": {}}
+                            )
 
                 ext_task = asyncio.create_task(ext_loop())
                 await asyncio.sleep(0.05)
@@ -117,6 +121,74 @@ async def test_target_get_attach_and_flattened_evaluate():
                     while ev.get("id") != 3:
                         ev = await browser.receive_json()
                     assert ev["result"]["result"]["value"] == "Example"
+                # WS-close detach uses hub.rpc; keep ext_loop alive until it replies.
+                for _ in range(50):
+                    if not hub.attached:
+                        break
+                    await asyncio.sleep(0.01)
+                ext_task.cancel()
+    finally:
+        await cdp.stop()
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_attach_refused_is_jsonrpc_minus_32000_without_retry():
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    cdp = await start_cdp(hub, "127.0.0.1", 0)
+    tab = {
+        "id": 7,
+        "windowId": 1,
+        "url": "https://example.com/",
+        "title": "Example",
+        "active": True,
+        "status": "complete",
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(hub.ws_url) as ext:
+                await ext.send_json({"type": "hello", "token": "ab" * 32, "v": 1})
+                await ext.receive_json()
+                await ext.send_json({"type": "tabs_snapshot", "tabs": [tab]})
+
+                attach_cmds = 0
+
+                async def ext_loop() -> None:
+                    nonlocal attach_cmds
+                    while True:
+                        msg = await ext.receive_json()
+                        if msg.get("type") != "cmd":
+                            continue
+                        if msg["op"] == "attach":
+                            attach_cmds += 1
+                            await ext.send_json(
+                                {
+                                    "type": "reply",
+                                    "id": msg["id"],
+                                    "ok": False,
+                                    "error": "attach_refused: denied",
+                                }
+                            )
+
+                ext_task = asyncio.create_task(ext_loop())
+                await asyncio.sleep(0.05)
+                ver = await (await session.get(f"{cdp.base_url}/json/version")).json()
+                async with session.ws_connect(ver["webSocketDebuggerUrl"]) as browser:
+                    await browser.send_json(
+                        {
+                            "id": 1,
+                            "method": "Target.attachToTarget",
+                            "params": {"targetId": "tab-7", "flatten": True},
+                        }
+                    )
+                    got = await browser.receive_json()
+                    while got.get("id") != 1:
+                        got = await browser.receive_json()
+                    assert got["error"]["code"] == -32000
+                    assert "attach_refused" in got["error"]["message"]
+                    await asyncio.sleep(0.05)
+                    assert attach_cmds == 1
                 ext_task.cancel()
     finally:
         await cdp.stop()
