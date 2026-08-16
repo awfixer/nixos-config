@@ -51,7 +51,7 @@ async def serve(cfg: Config) -> None:
     http_task: asyncio.Task[None] | None = None
     uv_server: uvicorn.Server | None = None
     mcp_sock: socket.socket | None = None
-    child_watch: asyncio.Task[None] | None = None
+    mcp = None
     prev_term = signal.getsignal(signal.SIGTERM)
     try:
         cdp = await start_cdp(hub, cfg.bind, cfg.cdp_port)
@@ -67,7 +67,6 @@ async def serve(cfg: Config) -> None:
         if cfg.cdp_mcp:
             cmd, args = child_argv(cfg.cdp_mcp, f"http://{cfg.bind}:{cfg.cdp_port}")
             await attach_child_tools(mcp, cmd, args)
-            child_watch = getattr(mcp, "_child_watch", None)
         # Bind here so EADDRINUSE is OSError; uvicorn.Server.startup sys.exit()s instead.
         mcp_sock = _bind_tcp(cfg.bind, mcp.settings.port)
         bound = int(mcp_sock.getsockname()[1])
@@ -81,20 +80,12 @@ async def serve(cfg: Config) -> None:
         signal.signal(signal.SIGTERM, _noop_signal)
         http_task = asyncio.create_task(uv_server.serve(sockets=[mcp_sock]))
         await _wait_http_bound(uv_server, http_task)
-        if child_watch is not None:
-            done, _pending = await asyncio.wait(
-                {http_task, child_watch},
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-            if http_task not in done:
-                # Child stdio died. Extra helium_* tools stay up.
-                await http_task
-        else:
-            await http_task
+        await http_task
     finally:
         signal.signal(signal.SIGTERM, prev_term)
-        if child_watch is not None:
-            child_watch.cancel()
+        child = getattr(mcp, "_child", None) if mcp is not None else None
+        if child is not None:
+            await child.stop()
         if uv_server is not None:
             uv_server.should_exit = True
         if http_task is not None:

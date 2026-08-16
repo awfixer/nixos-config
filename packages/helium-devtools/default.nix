@@ -97,7 +97,8 @@ EOF
     postInstall = ''
       wrapProgram $out/bin/chrome-devtools-mcp \
         --set CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS 1 \
-        --set CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS 1
+        --set CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS 1 \
+        --set NODE_OPTIONS "--max-old-space-size=96"
     '';
 
     meta = {

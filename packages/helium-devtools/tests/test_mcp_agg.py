@@ -52,7 +52,7 @@ async def test_child_tool_is_forwarded():
     try:
         mcp = build_mcp(hub)
         fake = str(Path(__file__).resolve().parent / "fake_stdio_mcp.py")
-        await attach_child_tools(mcp, sys.executable, [fake])
+        await attach_child_tools(mcp, sys.executable, [fake], idle_s=0)
         fn = mcp._tool_manager.get_tool("navigate_page").fn
         result = fn(url="https://example.com/")
         if hasattr(result, "__await__"):
@@ -60,9 +60,9 @@ async def test_child_tool_is_forwarded():
         text = result if isinstance(result, str) else str(result)
         assert "navigated:https://example.com/" in text
     finally:
-        watch = getattr(mcp, "_child_watch", None)
-        if watch is not None:
-            watch.cancel()
+        child = getattr(mcp, "_child", None)
+        if child is not None:
+            await child.stop()
         await hub.stop()
 
 
@@ -105,19 +105,45 @@ if __name__ == "__main__":
     await hub.start("127.0.0.1", 0)
     try:
         mcp = build_mcp(hub)
-        await attach_child_tools(mcp, sys.executable, [str(script)])
-        watch = getattr(mcp, "_child_watch", None)
-        assert watch is not None
-        await asyncio.wait_for(asyncio.shield(watch), timeout=3)
+        await attach_child_tools(mcp, sys.executable, [str(script)], idle_s=0)
+        await asyncio.sleep(0.8)
         assert exits == []
         status = mcp._tool_manager.get_tool("helium_status").fn()
         if hasattr(status, "__await__"):
             status = await status
         assert status["connected"] is False
+        fn = mcp._tool_manager.get_tool("ping").fn
+        result = fn()
+        if hasattr(result, "__await__"):
+            result = await result
+        assert "pong" in str(result)
     finally:
-        watch = getattr(mcp, "_child_watch", None)
-        if watch is not None:
-            watch.cancel()
+        child = getattr(mcp, "_child", None)
+        if child is not None:
+            await child.stop()
+        await hub.stop()
+
+
+@pytest.mark.asyncio
+async def test_child_is_down_after_list_and_respawns():
+    fake = str(Path(__file__).resolve().parent / "fake_stdio_mcp.py")
+    hub = ExtHub(token="ab" * 32)
+    await hub.start("127.0.0.1", 0)
+    try:
+        mcp = build_mcp(hub)
+        await attach_child_tools(mcp, sys.executable, [fake], idle_s=0)
+        child = mcp._child
+        assert child.alive is False
+        fn = mcp._tool_manager.get_tool("navigate_page").fn
+        result = fn(url="https://example.com/")
+        if hasattr(result, "__await__"):
+            result = await result
+        assert "navigated:https://example.com/" in str(result)
+        assert child.alive is False
+    finally:
+        child = getattr(mcp, "_child", None)
+        if child is not None:
+            await child.stop()
         await hub.stop()
 
 
@@ -147,7 +173,7 @@ if __name__ == "__main__":
     await hub.start("127.0.0.1", 0)
     try:
         mcp = build_mcp(hub)
-        await attach_child_tools(mcp, sys.executable, [str(script)])
+        await attach_child_tools(mcp, sys.executable, [str(script)], idle_s=0)
         fn = mcp._tool_manager.get_tool("hang_page").fn
         result = fn()
         if hasattr(result, "__await__"):
@@ -156,7 +182,7 @@ if __name__ == "__main__":
         assert "tool_timeout" in text
         assert "hang_page" in text
     finally:
-        watch = getattr(mcp, "_child_watch", None)
-        if watch is not None:
-            watch.cancel()
+        child = getattr(mcp, "_child", None)
+        if child is not None:
+            await child.stop()
         await hub.stop()

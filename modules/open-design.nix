@@ -129,6 +129,8 @@ in
       # So `vela login` can open Helium from this system unit.
       BROWSER = lib.getExe pkgs.helium-browser;
       XDG_RUNTIME_DIR = "/run/user/1000";
+      # 8GiB laptop: default V8 heap grows toward 1–2GiB. Cap the daemon.
+      NODE_OPTIONS = "--max-old-space-size=192";
     };
 
     serviceConfig = {
@@ -139,6 +141,9 @@ in
       ExecStart = "${lib.getExe daemon} --port ${toString daemonPort} --no-open";
       Restart = "on-failure";
       RestartSec = 3;
+      MemoryAccounting = true;
+      MemoryHigh = "256M";
+      MemoryMax = "384M";
       NoNewPrivileges = true;
       PrivateTmp = true;
       # ~/.od and agent creds (~/.claude, …) live in the user home.

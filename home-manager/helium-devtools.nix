@@ -54,6 +54,9 @@ in
       ExecStart = "${pkgs.helium-devtools}/bin/helium-devtools";
       Restart = "on-failure";
       RestartSec = 2;
+      MemoryAccounting = true;
+      MemoryHigh = "160M";
+      MemoryMax = "220M";
       Environment = [
         "CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS=1"
         "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS=1"

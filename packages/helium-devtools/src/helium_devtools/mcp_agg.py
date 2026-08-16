@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 import sys
 from typing import Any
 
@@ -13,6 +14,57 @@ from helium_devtools.ext_hub import ExtHub
 from helium_devtools import extra_tools
 
 CHILD_TOOL_TIMEOUT_S = 12.0
+CHILD_IDLE_S = 90.0
+
+
+class ChildMcp:
+    """chrome-devtools-mcp is ~150MiB. Keep it down except during a tool call."""
+
+    def __init__(self, command: str, args: list[str], idle_s: float = 0.0) -> None:
+        self.command = command
+        self.args = args
+        self.idle_s = idle_s
+        self._lock = asyncio.Lock()
+        self._stdio_cm: Any = None
+        self._session_cm: Any = None
+        self._session: ClientSession | None = None
+
+    @property
+    def alive(self) -> bool:
+        return self._session is not None
+
+    async def ensure(self) -> ClientSession:
+        async with self._lock:
+            if self._session is None:
+                params = StdioServerParameters(command=self.command, args=self.args)
+                stdio_cm = stdio_client(params)
+                read, write = await stdio_cm.__aenter__()
+                session_cm = ClientSession(read, write)
+                session = await session_cm.__aenter__()
+                await session.initialize()
+                self._stdio_cm = stdio_cm
+                self._session_cm = session_cm
+                self._session = session
+            return self._session
+
+    async def stop(self) -> None:
+        async with self._lock:
+            session_cm = self._session_cm
+            stdio_cm = self._stdio_cm
+            self._session = None
+            self._session_cm = None
+            self._stdio_cm = None
+        for cm in (session_cm, stdio_cm):
+            if cm is None:
+                continue
+            try:
+                await cm.__aexit__(None, None, None)
+            except Exception:
+                pass
+
+    async def list_tools(self) -> Any:
+        session = await self.ensure()
+        return await session.list_tools()
 
 
 def child_argv(cdp_mcp: str, cdp_url: str = "http://127.0.0.1:9222") -> tuple[str, list[str]]:
@@ -115,21 +167,15 @@ def _signature_for_tool(tool: Any) -> inspect.Signature:
     return inspect.Signature(params, return_annotation=Any)
 
 
-def _add_forwarded_tool(mcp: FastMCP, session: ClientSession, tool: Any) -> None:
+def _add_forwarded_tool(mcp: FastMCP, child: ChildMcp, tool: Any) -> None:
     name = tool.name
 
     async def _forward(**kwargs: Any) -> Any:
         payload = {k: v for k, v in kwargs.items() if v is not None}
         try:
-            result = await asyncio.wait_for(
-                session.call_tool(name, payload), timeout=CHILD_TOOL_TIMEOUT_S
-            )
-        except TimeoutError:
-            return f"tool_timeout: {name} exceeded {CHILD_TOOL_TIMEOUT_S:.0f}s"
-        if result.content:
-            texts = [c.text for c in result.content if getattr(c, "text", None)]
-            return texts[0] if len(texts) == 1 else texts
-        return ""
+            return await _call_child_tool(child, name, payload)
+        finally:
+            await child.stop()
 
     _forward.__name__ = name
     _forward.__doc__ = tool.description or name
@@ -137,24 +183,49 @@ def _add_forwarded_tool(mcp: FastMCP, session: ClientSession, tool: Any) -> None
     mcp.add_tool(_forward, name=name, description=tool.description or name)
 
 
-async def attach_child_tools(mcp: FastMCP, command: str | None, args: list[str]) -> None:
+async def _call_child_tool(child: ChildMcp, name: str, payload: dict[str, Any]) -> Any:
+    last_err: Exception | None = None
+    for attempt in range(2):
+        session = await child.ensure()
+        try:
+            result = await asyncio.wait_for(
+                session.call_tool(name, payload), timeout=CHILD_TOOL_TIMEOUT_S
+            )
+        except TimeoutError:
+            return f"tool_timeout: {name} exceeded {CHILD_TOOL_TIMEOUT_S:.0f}s"
+        except Exception as exc:
+            last_err = exc
+            await child.stop()
+            continue
+        if result.content:
+            texts = [c.text for c in result.content if getattr(c, "text", None)]
+            return texts[0] if len(texts) == 1 else texts
+        return ""
+    return f"child_error: {last_err}"
+
+
+def _child_idle_s() -> float:
+    raw = os.environ.get("HELIUM_DEVTOOLS_CHILD_IDLE_S")
+    if raw is None or raw == "":
+        return CHILD_IDLE_S
+    try:
+        return float(raw)
+    except ValueError:
+        return CHILD_IDLE_S
+
+
+async def attach_child_tools(
+    mcp: FastMCP, command: str | None, args: list[str], *, idle_s: float | None = None
+) -> None:
     if command is None:
         return
-    params = StdioServerParameters(command=command, args=args)
-    # Keep the stdio context open for the life of the parent.
-    stdio_cm = stdio_client(params)
-    read, write = await stdio_cm.__aenter__()
-    session_cm = ClientSession(read, write)
-    session = await session_cm.__aenter__()
-    await session.initialize()
-    listed = await session.list_tools()
+    child = ChildMcp(command, args, idle_s=_child_idle_s() if idle_s is None else idle_s)
+    listed = await child.list_tools()
     for tool in listed.tools:
-        _add_forwarded_tool(mcp, session, tool)
-
-    mcp._child_stdio_cm = stdio_cm
-    mcp._child_session_cm = session_cm
-    mcp._child_session = session
-    mcp._child_watch = asyncio.create_task(_exit_when_stdio_closes(read))
+        _add_forwarded_tool(mcp, child, tool)
+    await child.stop()
+    mcp._child = child
+    mcp._child_watch = asyncio.create_task(asyncio.sleep(0))
 
 
 async def _exit_when_stdio_closes(read: Any) -> None:

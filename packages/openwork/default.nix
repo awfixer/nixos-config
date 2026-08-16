@@ -177,6 +177,7 @@ stdenv.mkDerivation {
       --prefix LD_LIBRARY_PATH : "$out/share/${pname}" \
       --prefix PATH : "${lib.makeBinPath [ pciutils ]}" \
       --add-flags "--no-sandbox" \
+      --add-flags "--js-flags=--max-old-space-size=256" \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
   '';
 
