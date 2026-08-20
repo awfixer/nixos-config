@@ -42,12 +42,6 @@ in
         ForwardAgent = true;
         IdentityAgent = onePasswordAgent;
       };
-
-      # Existing remotes using git@github.com-solved:org/repo.git
-      "github.com-solved" = {
-        HostName = "github.com";
-        IdentityAgent = onePasswordAgent;
-      };
     };
   };
 }
