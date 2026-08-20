@@ -21,7 +21,7 @@
     ./systemd.nix
     ./tailscale.nix
     ./users.nix
-    #./virt.nix
+    ./virt.nix
     #./windscribe.nix
   ];
 

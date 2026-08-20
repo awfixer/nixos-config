@@ -1,0 +1,27 @@
+{
+  "description": "Reject Node/npm/pnpm/yarn toolchains and packages Bun already ships as builtins.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|run_terminal_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse.py\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|search_replace",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

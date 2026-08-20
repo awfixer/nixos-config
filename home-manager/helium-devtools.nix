@@ -7,11 +7,31 @@
 
 let
   tokenPath = "${config.xdg.dataHome}/helium-devtools/token";
+  # Keep the Home Manager *target* at ~/.grok/plugins/helium-devtools so Grok
+  # enablement, auto-trust, and MCP discovery survive the ai/ → ai/helium-devtools
+  # source move. Only the Nix source path changed.
+  pluginRoot = ../ai/helium-devtools;
+  ext = pluginRoot + "/extension";
+  required = {
+    pluginJson = pluginRoot + "/.grok-plugin/plugin.json";
+    mcp = pluginRoot + "/.mcp.json";
+    skill = pluginRoot + "/skills/helium-devtools/SKILL.md";
+    debugSkill = pluginRoot + "/skills/helium-debug-site/SKILL.md";
+    agent = pluginRoot + "/agents/helium-debugger.md";
+    manifest = ext + "/manifest.json";
+    background = ext + "/background.js";
+    popupHtml = ext + "/popup.html";
+    popupJs = ext + "/popup.js";
+    offscreenHtml = ext + "/offscreen.html";
+    offscreenJs = ext + "/offscreen.js";
+  };
+  missing = lib.filter (name: !(builtins.pathExists required.${name})) (lib.attrNames required);
 in
+assert missing == [ ] || throw "helium-devtools plugin incomplete under ai/helium-devtools: missing ${lib.concatStringsSep ", " missing}";
 {
   home.packages = [ pkgs.helium-devtools ];
 
-  home.file.".grok/plugins/helium-devtools".source = ../ai;
+  home.file.".grok/plugins/helium-devtools".source = pluginRoot;
 
   home.activation.heliumDevtoolsToken = lib.hm.dag.entryAfter [ "writeBoundary" "linkGeneration" ] ''
     dir="${config.xdg.dataHome}/helium-devtools"
@@ -25,12 +45,12 @@ in
       "$dir/extension/popup.js" \
       "$dir/extension/offscreen.html" \
       "$dir/extension/offscreen.js"
-    install -m 644 ${../ai/extension/manifest.json} "$dir/extension/manifest.json"
-    install -m 644 ${../ai/extension/background.js} "$dir/extension/background.js"
-    install -m 644 ${../ai/extension/popup.html} "$dir/extension/popup.html"
-    install -m 644 ${../ai/extension/popup.js} "$dir/extension/popup.js"
-    install -m 644 ${../ai/extension/offscreen.html} "$dir/extension/offscreen.html"
-    install -m 644 ${../ai/extension/offscreen.js} "$dir/extension/offscreen.js"
+    install -m 644 ${required.manifest} "$dir/extension/manifest.json"
+    install -m 644 ${required.background} "$dir/extension/background.js"
+    install -m 644 ${required.popupHtml} "$dir/extension/popup.html"
+    install -m 644 ${required.popupJs} "$dir/extension/popup.js"
+    install -m 644 ${required.offscreenHtml} "$dir/extension/offscreen.html"
+    install -m 644 ${required.offscreenJs} "$dir/extension/offscreen.js"
     if [ ! -f "$dir/token" ]; then
       ${pkgs.openssl}/bin/openssl rand -hex 32 > "$dir/token"
       chmod 600 "$dir/token"

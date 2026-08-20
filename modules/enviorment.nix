@@ -29,9 +29,8 @@
   # are not started as daemons — open only when needed (RAM is the constraint).
   environment.systemPackages = with pkgs; [
     ghostty
-    zed-editor
-    chromium
-    mpv
+    gcc
+    gnumake
     fd
     ghorg
     rustup
@@ -52,11 +51,6 @@
     git
     uv
     nautilus
-    beamPackages.erlang
-    beamPackages.elixir
-    gleam
-    gtk4-layer-shell
-    gtk4
     gh
     vim
     unzip

@@ -45,14 +45,14 @@
 
 let
   pname = "openwork";
-  version = "0.18.23";
+  version = "0.18.25";
 in
 stdenv.mkDerivation {
   inherit pname version;
 
   src = fetchzip {
     url = "https://github.com/different-ai/openwork/releases/download/v${version}/openwork-linux-x64-${version}.tar.gz";
-    hash = "sha256-Ns1GtlL2bQzF22pCxLOJRB7Mzt3deeHae5EISphluCQ=";
+    hash = "sha256-5E78OCRc8lNosy4JWZlQXeVpMDZu+uwhSTrbozKkKTg=";
   };
 
   nativeBuildInputs = [
