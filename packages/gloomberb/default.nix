@@ -9,11 +9,11 @@
 
 stdenv.mkDerivation rec {
   pname = "gloomberb";
-  version = "0.10.5";
+  version = "0.11.0";
 
   src = fetchurl {
     url = "https://github.com/gloom-sh/gloomberb/releases/download/v${version}/gloomberb-linux-x64.gz";
-    hash = "sha256-nVX0CbYv5eOWR2uoL4i4AWphfHmRKWDd4tBqN5hA9I8=";
+    hash = "sha256-TiNkAyVWXNKssWZGqxyzfCOxdZx60IQlXHpcrJxhn/k=";
   };
 
   # Single gzipped ELF, not a source tree.

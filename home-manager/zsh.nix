@@ -15,9 +15,13 @@
 
     # Preserve existing sourced env
     initContent = ''
+      . "$HOME/.vite-plus/env"
       . "$HOME/.local/bin/env"
       . "$HOME/.executor/bin/env"
       export PATH="/home/awfixer/.bun/bin:$PATH"
+      # illogical-impulse: apply wallpaper-generated terminal colors
+      [ -f "$HOME/.local/state/quickshell/user/generated/terminal/sequences.txt" ] \
+        && cat "$HOME/.local/state/quickshell/user/generated/terminal/sequences.txt"
     '';
 
     # History configuration

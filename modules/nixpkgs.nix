@@ -8,7 +8,9 @@
       buzz = final.callPackage ../packages/buzz { };
       gloomberb = final.callPackage ../packages/gloomberb { };
       openwork = final.callPackage ../packages/openwork { };
+      kraken-desktop = final.callPackage ../packages/kraken { };
       vela-cli = final.callPackage ../packages/vela { };
+      t3-code = final.callPackage ../packages/t3-code { };
       #orion-browser = final.callPackage ../packages/orion { };
       #zen-browser = final.callPackage ../packages/zen-browser { };
       #windscribe = final.callPackage ../packages/windscribe { };

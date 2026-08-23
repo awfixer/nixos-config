@@ -17,6 +17,13 @@
       url = "github:nexu-io/open-design";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Quickshell pinned to the commit upstream dots-hyprland (illogical-impulse)
+    # validates against (sdata/dist-nix/home-manager/flake.nix). nixpkgs' 0.3.0
+    # lags the QML APIs the ii config uses.
+    quickshell = {
+      url = "github:quickshell-mirror/quickshell/7511545ee20664e3b8b8d3322c0ffe7567c56f7a";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -27,11 +34,15 @@
       sops-nix,
       nix-flatpak,
       open-design,
+      quickshell,
       ...
     }:
     let
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
 
       # Located via mcp-nixos (unstable):
       #   playwright / playwright-driver / playwright-test
@@ -55,7 +66,9 @@
           buzz = pkgs.callPackage ./packages/buzz { };
           gloomberb = pkgs.callPackage ./packages/gloomberb { };
           openwork = pkgs.callPackage ./packages/openwork { };
+          kraken-desktop = pkgs.callPackage ./packages/kraken { };
           vela-cli = pkgs.callPackage ./packages/vela { };
+          t3-code = pkgs.callPackage ./packages/t3-code { };
           open-design-daemon = open-design.packages.${system}.daemon;
           open-design-web = open-design.packages.${system}.web;
           #orion-browser = pkgs.callPackage ./packages/orion { };
@@ -93,7 +106,9 @@
           # Host lives under ./hosts/laptop (hardware + zram/swap are pure).
           laptop = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit open-design; };
+            specialArgs = {
+              inherit open-design quickshell nix-flatpak;
+            };
             modules = [
               ./hosts/laptop
               home-manager.nixosModules.home-manager
@@ -107,6 +122,8 @@
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     backupFileExtension = "backup";
+                    # Flake inputs needed inside home-manager modules
+                    extraSpecialArgs = { inherit quickshell; };
                     users.awfixer = import ./home-manager;
                   };
                 }

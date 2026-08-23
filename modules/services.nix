@@ -56,7 +56,8 @@
 
   # ---------------------------------------------------------------------------
   # Bluetooth (Broadcom BCM4350 combo on this laptop — hci0 present)
-  # Radio stays powered; blueman applet is started from Hyprland.
+  # Radio stays powered. UI lives in the ii Quickshell Bluetooth panel
+  # (kcm_bluetooth); no blueman tray applet anymore.
   # ---------------------------------------------------------------------------
   hardware.bluetooth = {
     enable = true;
@@ -72,7 +73,4 @@
       };
     };
   };
-
-  # GTK Bluetooth manager (applet + manager). Applet is started from Hyprland.
-  services.blueman.enable = true;
 }

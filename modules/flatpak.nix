@@ -1,13 +1,30 @@
 { ... }:
 
 {
-  # Flatpak runtime + session helper stay off to free RAM / document-portal churn.
-  # Spotify is native via modules/spotify.nix (not Flatpak).
-  # Re-enable when you need Cohesion; package list is kept for that.
+  # Flatpak for Cohesion (Spotify web client wrapper) and Orion.
+  # Both remotes must be declared — NixOS installs `packages` via a boot-time
+  # systemd service that fails silently per-package when a remote is missing
+  # (Cohesion lives on Flathub, Orion on its own repo).
   services.flatpak = {
-    enable = false;
+    enable = true;
+
+    remotes = [
+      {
+        name = "flathub";
+        location = "https://dl.flathub.org/repo/flathub.flatpakrepo";
+      }
+      {
+        name = "orion-beta";
+        location = "https://flatpak.orionbrowser.com/orion-beta.flatpakrepo";
+      }
+    ];
+
+    # Attribute form (appId + origin), NOT "remote:appId" strings: flatpak 1.18
+    # rejects ids containing ":" ("Name can't contain :"), which crashed
+    # flatpak-managed-install.service on every activation.
     packages = [
-      "io.github.brunofin.Cohesion"
+      { appId = "io.github.brunofin.Cohesion"; origin = "flathub"; }
+      { appId = "com.kagi.orion"; origin = "orion-beta"; }
     ];
   };
 }

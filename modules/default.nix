@@ -2,12 +2,14 @@
 {
   imports = [
     ./1password.nix
+    ./agent-browser.nix
     #./orion.nix
     ./chromium.nix
     ./enviorment.nix
     ./firewall.nix
     ./flatpak.nix
     ./hyprland.nix
+    ./illogical-impulse.nix
     ./nixld.nix
     ./nixpkgs.nix
     ./open-design.nix

@@ -36,14 +36,14 @@ in
   # Theme must also be on the system path so SDDM finds it under share/sddm/themes
   environment.systemPackages = with pkgs; [
     sddmTheme
-    hyprpolkitagent
+    # Polkit agent comes from ii's Quickshell shell (PolkitService.qml)
   ];
 
   # Unlock the login keyring with the SDDM session password (libsecret / Seahorse)
   security.pam.services.sddm.enableGnomeKeyring = true;
   services.gnome.gnome-keyring.enable = true;
 
-  # Waybar battery + power status / power-profiles module
+  # Battery + power status widgets / power profile switching
   services.upower.enable = true;
   services.power-profiles-daemon.enable = true;
 

@@ -1,14 +1,17 @@
 { config, pkgs, lib, ... }:
 
 let
+  version = "3.17.8";
+  # Commit from downloads.cursor.com production channel (api/download).
+  commit = "2fdd31c9f33f7fbe501f2d57772dc5bf64b63621";
   cursorPackage = pkgs."code-cursor".overrideAttrs (_: rec {
-    version = "3.7.19";
+    inherit version;
     src = pkgs.appimageTools.extract {
       pname = "cursor";
-      version = "3.7.19";
+      inherit version;
       src = pkgs.fetchurl {
-        url = "https://downloads.cursor.com/production/80c653c2c3528e65016a0d304b54486084b470bb/linux/x64/Cursor-3.7.19-x86_64.AppImage";
-        hash = "sha256-qlNQwaDqPL1/wsxwyUXPWvoeXuWoVahibnk0H0h6KZ4=";
+        url = "https://downloads.cursor.com/production/${commit}/linux/x64/Cursor-${version}-x86_64.AppImage";
+        hash = "sha256-OI0gaN8FfRseAGw7u1GQhatA7HguyKsg7CUN8IprdAI=";
       };
     };
     sourceRoot = "cursor-${version}-extracted/usr/share/cursor";

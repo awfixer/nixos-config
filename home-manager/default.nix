@@ -11,6 +11,12 @@
       "x-scheme-handler/https" = [ "helium.desktop" ];
       "x-scheme-handler/about" = [ "helium.desktop" ];
       "x-scheme-handler/unknown" = [ "helium.desktop" ];
+      # OAuth / deep links for Kraken Desktop (see bundled README).
+      "x-scheme-handler/kraken" = [ "kraken.desktop" ];
+
+      # T3 Code OAuth login callbacks (see packages/t3-code).
+      "x-scheme-handler/t3code" = [ "t3code-url-handler.desktop" ];
+      "x-scheme-handler/t3code-dev" = [ "t3code-url-handler.desktop" ];
 
       # MS Office formats → OnlyOffice (better fidelity); LibreOffice remains installed
       "application/vnd.openxmlformats-officedocument.presentationml.presentation" = [
@@ -34,11 +40,8 @@
   imports = [
     ./keyring.nix
     ./hyprland.nix
-    ./wallpaper.nix
+    ./quickshell-ii.nix
     ./screenshots.nix
-    ./waybar.nix
-    ./swaync.nix
-    ./hyprlauncher.nix
     ./direnv.nix
     ./zsh.nix
     ./packages.nix
@@ -51,10 +54,13 @@
     ./buzz.nix
     ./gloomberb.nix
     ./openwork.nix
+    ./kraken.nix
     ./open-design.nix
     #./orion.nix
     #./zen-browser.nix
-    #./cursor.nix
+    ./cursor.nix
+    ./cline.nix
+    ./t3-code.nix
     ./ghostty.nix
     #./windscribe.nix
   ];

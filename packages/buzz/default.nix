@@ -11,11 +11,11 @@
 
 let
   pname = "buzz";
-  version = "0.5.14";
+  version = "0.5.18";
 
   src = fetchurl {
     url = "https://github.com/block/buzz/releases/download/desktop-v${version}/Buzz_${version}_amd64.AppImage";
-    hash = "sha256-o5LYWRZfoi+FAKlQuiCsa4p3OFHmHeVzKp/VU11LKKg=";
+    hash = "sha256-0ErOc3u/juQdV3MGG+q7Fx04orrdUSks3Qa8fBhNP3E=";
   };
 
   # Upstream AppImage strips bundled GStreamer and expects host plugins
@@ -49,7 +49,7 @@ let
   # inject nixpkgs plugin paths. Also disable WebKit's bwrap sandbox — child
   # WebKitWebProcess otherwise cannot see /nix/store plugins (blank media /
   # "appsink not found").
-  appimageContents = appimageTools.extractType2 {
+  appimageContents = appimageTools.extract {
     inherit pname version src;
     postExtract = ''
       substituteInPlace $out/usr/bin/buzz-desktop \

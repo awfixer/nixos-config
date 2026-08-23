@@ -30,6 +30,7 @@
   environment.systemPackages = with pkgs; [
     ghostty
     gcc
+    zed-editor
     gnumake
     fd
     ghorg

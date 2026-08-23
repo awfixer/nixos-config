@@ -23,7 +23,7 @@
     DefaultIPAccounting = false;
   };
 
-  # User manager (ghostty scopes, waybar, etc.): same policy — this is what
+  # User manager (ghostty scopes, qs, etc.): same policy — this is what
   # previously mass-SIGKILLed grok after rustc died in the ghostty surface scope.
   systemd.user.settings.Manager = {
     DefaultOOMPolicy = "continue";
@@ -64,15 +64,15 @@
   services.gnome.localsearch.enable = false;
   services.gnome.tinysparql.enable = false;
 
-  # No printers / location / firmware-update daemon on this laptop.
+  # No printers / firmware-update daemon on this laptop.
   # mDNS/avahi is owned by modules/spotify.nix (Connect + LAN speaker discovery).
+  # geoclue2 is enabled in modules/illogical-impulse.nix (ii Weather widget).
   services.printing.enable = false;
-  services.geoclue2.enable = false;
   services.fwupd.enable = false;
   services.colord.enable = false;
   services.sysprof.enable = false;
   services.tlp.enable = false;
-  # Bluetooth + blueman live in services.nix (needed for speakers / peripherals).
+  # Bluetooth lives in services.nix (needed for speakers / peripherals).
 
   # Optional noise units.
   systemd.coredump.enable = false;
