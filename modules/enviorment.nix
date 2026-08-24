@@ -58,5 +58,8 @@
     zig
     btop
     direnv
+    # System-wide counterparts of packages/tyyt's vendored player/downloader
+    mpv
+    yt-dlp
   ];
 }
