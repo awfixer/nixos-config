@@ -1,12 +1,12 @@
 # Cline CLI, built from the vendored monorepo in ./src with Bun.
 #
-# Everything is self-contained: dependencies come from a fixed-output
-# bun cache derivation (pinned via src/bun.lock), the build runs fully
-# offline, and the runtime only needs the bundled bun interpreter — no
-# system node, no system bun.
+# Self-contained: the fixed-output bunDeps derivation performs the one
+# online install (deps pinned via src/bun.lock), and everything after it —
+# build, prune, runtime — works from that node_modules snapshot. The
+# package ships its own nixpkgs bun interpreter; no system node or system
+# bun is used or modified.
 #
-# After changing ./src deps (bun.lock / package.json), the FOD hash must
-# be refreshed:
+# After changing ./src deps (bun.lock / package.json) refresh the hash:
 #   nix build .#cline 2>&1 | grep "got:"    # copy into bunDeps.outputHash
 {
   lib,
@@ -24,24 +24,25 @@ let
   pname = "cline";
   version = "3.0.57";
 
-  # Pruned monorepo: just the workspaces the CLI build needs. bun supports
-  # --frozen-lockfile on pruned checkouts — workspaces whose package.json is
-  # absent are skipped, so apps/vscode (better-sqlite3/grpc-tools native
-  # installs) and other unused apps never enter the dependency graph.
+  # Keep every workspace: bun errors when a root package.json workspace glob
+  # resolves to nothing, so apps cannot simply be deleted. Unused apps are
+  # neutralised instead — lifecycle scripts never run (--ignore-scripts), so
+  # nothing native (better-sqlite3, grpc-tools, playwright browsers) is built
+  # or fetched — and dev-only packages are pruned before anything ships.
   src = lib.fileset.toSource {
     root = ./src;
     fileset = lib.fileset.unions [
       ./src/package.json
       ./src/bun.lock
       ./src/patches
+      ./src/apps
       ./src/sdk
-      ./src/apps/cli
-      ./src/apps/cline-hub
     ];
   };
 
-  # Fixed-output derivation that warms the bun install cache once. Only here
-  # is network access used; every later step resolves from this cache.
+  # Fixed-output derivation: runs the online `bun install` once and ships
+  # the installed node_modules tree (content-hashed, so it is built at most
+  # once per lockfile change and shared via the substituter).
   bunDeps = stdenvNoCC.mkDerivation {
     name = "${pname}-${version}-bun-deps";
 
@@ -52,20 +53,30 @@ let
     preferLocalBuild = true;
 
     buildCommand = ''
-      export HOME=$TMPDIR/home
-      mkdir -p "$HOME"
-      export BUN_INSTALL_CACHE_DIR=$TMPDIR/bun-cache
+      export HOME=$PWD/.home
+      export XDG_CACHE_HOME=$PWD/.cache
+      mkdir -p "$HOME" "$XDG_CACHE_HOME"
+
+      # Explicit unpack: with only buildCommand set, this derivation does
+      # not go through the generic unpack phase.
+      cp -a --no-preserve=mode "$src"/. .
+      chmod -R u+w .
 
       bun install --frozen-lockfile --ignore-scripts
 
+      # Bun's (default, since 1.3) isolated linker gives every workspace its
+      # own node_modules (root, apps/*, sdk/*) holding the @cline/* workspace
+      # links — ship all of them, paths preserved.
       mkdir -p $out
-      cp -r "$BUN_INSTALL_CACHE_DIR" $out/cache
+      find . -type d -name node_modules -prune | while read -r t; do
+        cp -a --parents "$t" $out/
+      done
     '';
 
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
     # Update from the "got:" line of the failed first build.
-    outputHash = lib.fakeHash;
+    outputHash = "sha256-T5svQeh+bG2Wcm7m9qEwjbr8is1/dmHcZiOqQGbs85I=";
   };
 in
 stdenvNoCC.mkDerivation {
@@ -83,22 +94,26 @@ stdenvNoCC.mkDerivation {
   configurePhase = ''
     runHook preConfigure
 
-    export HOME=$TMPDIR/home
-    export XDG_CACHE_HOME=$TMPDIR/xdg-cache
-    mkdir -p "$HOME" "$XDG_CACHE_HOME"
+    # Keep every writable location bun touches inside the build dir: the
+    # sandbox has no writable /tmp and TMPDIR is not exported to the builder.
+    export TMPDIR=$PWD/.tmp
+    export HOME=$PWD/.home
+    export XDG_CACHE_HOME=$PWD/.cache
+    mkdir -p "$TMPDIR" "$HOME" "$XDG_CACHE_HOME"
 
-    # Restore the warmed cache; --offline makes any cache miss a hard error
-    # instead of a silent fetch, keeping the build deterministic.
-    export BUN_INSTALL_CACHE_DIR=$XDG_CACHE_HOME/bun-install
-    cp -r ${bunDeps}/cache/. "$BUN_INSTALL_CACHE_DIR"/
+    # Restore every installed node_modules tree (root + per-workspace).
+    # Store paths are read-only (555); bun/tsc/vite need write access.
+    for t in $(cd ${bunDeps} && find . -type d -name node_modules -prune); do
+      mkdir -p "$(dirname "$t")"
+      cp -a --no-preserve=mode "${bunDeps}/$t" "$t"
+    done
+    chmod -R u+w .
 
     runHook postConfigure
   '';
 
   buildPhase = ''
     runHook preBuild
-
-    bun install --offline --frozen-lockfile --ignore-scripts
 
     # SDK packages first: the CLI bundle imports their dist/ exports and
     # copies core's plugin-sandbox-bootstrap.js out of them.
@@ -115,14 +130,16 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
 
+    # Mirror the workspace-relative layout: the bundle's external imports
+    # (react, @opentui/*) resolve through apps/cli/node_modules up into the
+    # root node_modules/.bun store, so both travel together untouched.
     mkdir -p $out/lib/cline
-    cp -r apps/cli/dist $out/lib/cline/dist
-    cp apps/cli/package.json $out/lib/cline/package.json
-    cp -r node_modules $out/lib/cline/node_modules
+    cp -a --parents node_modules apps/cli/package.json apps/cli/dist \
+      $out/lib/cline/
 
     mkdir -p $out/bin
     makeWrapper ${lib.getExe bun} $out/bin/cline \
-      --add-flags "$out/lib/cline/dist/index.js" \
+      --add-flags "$out/lib/cline/apps/cli/dist/index.js" \
       --prefix PATH : ${lib.makeBinPath [
         git
         ripgrep

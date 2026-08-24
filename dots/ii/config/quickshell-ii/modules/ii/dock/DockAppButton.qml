@@ -13,14 +13,54 @@ DockButton {
     property var appListRoot
     property int lastFocused: -1
     property real iconSize: 35
-    property real countDotWidth: 10
-    property real countDotHeight: 4
     property bool appIsActive: appToplevel.toplevels.find(t => (t.activated == true)) !== undefined
 
     readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
+    readonly property real maxScale: appListRoot.magnification ?? 1
     property var desktopEntry: DesktopEntries.heuristicLookup(appToplevel.appId)
     enabled: !isSeparator
     implicitWidth: isSeparator ? 1 : implicitHeight - topInset - bottomInset
+    // Apple dock style: icons grow upward from a fixed bottom edge
+    transformOrigin: Item.Bottom
+
+    // Magnification: Gaussian falloff of scale around the cursor position
+    scale: {
+        if (isSeparator || !appListRoot.pointerInside || maxScale <= 1)
+            return 1;
+        const dx = mapFromItem(appListRoot.listView, appListRoot.cursorX, 0).x - width / 2;
+        return 1 + (maxScale - 1) * Math.exp(-(dx * dx) / (2 * appListRoot.sigma * appListRoot.sigma));
+    }
+    Behavior on scale {
+        NumberAnimation {
+            alwaysRunToEnd: true
+            duration: 100
+            easing.type: Easing.OutQuad
+        }
+    }
+
+    SequentialAnimation {
+        id: launchBounceAnim
+        NumberAnimation {
+            target: iconWrap
+            property: "scale"
+            to: 1.25
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
+        NumberAnimation {
+            target: iconWrap
+            property: "scale"
+            to: 1
+            duration: 400
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+        }
+    }
+
+    function bounce() {
+        if (Config.options.dock.launchBounce ?? true)
+            launchBounceAnim.restart();
+    }
 
     Connections {
         target: DesktopEntries
@@ -63,6 +103,7 @@ DockButton {
 
     onClicked: {
         if (appToplevel.toplevels.length === 0) {
+            root.bounce();
             root.desktopEntry?.execute();
             return;
         }
@@ -71,16 +112,18 @@ DockButton {
     }
 
     middleClickAction: () => {
+        root.bounce();
         root.desktopEntry?.execute();
     }
 
     altAction: () => {
-        TaskbarApps.togglePin(appToplevel.appId);
+        appListRoot.openContextMenuFor(root);
     }
 
     contentItem: Loader {
         active: !isSeparator
         sourceComponent: Item {
+            id: iconWrap
             anchors.centerIn: parent
 
             Loader {
@@ -91,9 +134,10 @@ DockButton {
                     verticalCenter: parent.verticalCenter
                 }
                 active: !root.isSeparator
-                sourceComponent: IconImage {
-                    source: Quickshell.iconPath(AppSearch.guessIcon(appToplevel.appId), "image-missing")
-                    implicitSize: root.iconSize
+                sourceComponent: SquircleIcon {
+                    iconName: AppSearch.guessIcon(appToplevel.appId)
+                    iconSize: root.iconSize
+                    clipToSquircle: Config.options.dock.squircleIcons ?? true
                 }
             }
 
@@ -116,23 +160,20 @@ DockButton {
                 }
             }
 
-            RowLayout {
-                spacing: 3
+            // Single macOS-style running indicator dot under the icon
+            Rectangle {
                 anchors {
                     top: iconImageLoader.bottom
                     topMargin: 2
-                    horizontalCenter: parent.horizontalCenter
+                    horizontalCenter: iconImageLoader.horizontalCenter
                 }
-                Repeater {
-                    model: Math.min(appToplevel.toplevels.length, 3)
-                    delegate: Rectangle {
-                        required property int index
-                        radius: Appearance.rounding.full
-                        implicitWidth: (appToplevel.toplevels.length <= 3) ? 
-                            root.countDotWidth : root.countDotHeight // Circles when too many
-                        implicitHeight: root.countDotHeight
-                        color: appIsActive ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.4)
-                    }
+                visible: appToplevel.toplevels.length > 0
+                radius: Appearance.rounding.full
+                implicitWidth: 4
+                implicitHeight: 4
+                color: appIsActive ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.55)
+                Behavior on color {
+                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
                 }
             }
         }

@@ -332,6 +332,9 @@ Singleton {
                 property list<string> pinnedApps: [ // IDs of pinned entries
                     "org.kde.dolphin", "kitty",]
                 property list<string> ignoredAppRegexes: []
+                property real magnification: 1.6 // Dock hover magnification factor, 1 disables
+                property bool launchBounce: true // Bounce icons when launching apps
+                property bool squircleIcons: true // Clip app icons to Apple-style squircles
             }
 
             property JsonObject interactions: JsonObject {

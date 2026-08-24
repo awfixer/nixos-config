@@ -18,9 +18,17 @@ Item {
     property real windowControlsHeight: 30
     property real buttonPadding: 5
 
+    // Magnification (Apple dock style)
+    readonly property real magnification: Config.options.dock.magnification ?? 1
+    readonly property real sigma: 70 // Gaussian falloff radius in px
+    property bool pointerInside: false
+    property real cursorX: 0
+
     property Item lastHoveredButton: null
     property bool buttonHovered: false
-    property bool requestDockShow: previewPopup.show
+    property bool requestDockShow: previewPopup.show || appContextMenu.show
+
+    property alias listView: listView
 
     Layout.fillHeight: true
     Layout.topMargin: Appearance.sizes.hyprlandGapsOut
@@ -30,6 +38,35 @@ Item {
         if (!button || !root.QsWindow)
             return 0;
         return root.QsWindow.mapFromItem(button, button.width / 2, 0).x;
+    }
+
+    function openContextMenuFor(button) {
+        appContextMenu.appToplevel = button.appToplevel;
+        appContextMenu.desktopEntry = button.desktopEntry;
+        appContextMenu.cachedCenterX = root.popupCenterXForButton(button);
+        appContextMenu.show = true;
+    }
+
+    // Hover tracker for magnification. Declared before the list view so it
+    // sits underneath it: hover is broadcast to all areas, but wheel and
+    // clicks stay with the list view and its delegates.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        hoverEnabled: true
+        onPositionChanged: mouse => {
+            root.cursorX = mouse.x;
+        }
+        onContainsMouseChanged: {
+            root.pointerInside = containsMouse;
+            if (!containsMouse)
+                root.cursorX = -10000;
+        }
+    }
+
+    DockAppMenu {
+        id: appContextMenu
+        appListRoot: root
     }
 
     StyledListView {

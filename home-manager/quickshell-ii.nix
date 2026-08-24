@@ -169,6 +169,7 @@ in
       # NOTE: iiVenv is intentionally NOT on PATH — it would shadow python3.
       # Scripts reach it via ILLOGICAL_IMPULSE_VIRTUAL_ENV + `bin/activate`.
       pkgs.adw-gtk3 # gsettings gtk-theme targets set by switchwall.sh
+      pkgs.whitesur-icon-theme # macOS-style icons (kdeglobals [Icons] Theme)
       pkgs.lxqt.pavucontrol-qt # ii volume-mixer launcher
     ]
     ++ fontPkgs
