@@ -47,7 +47,7 @@
 		"lucide-react": "^0.511.0",
 		"magic-string": "^0.30.21",
 		"marked": "^15.0.12",
-		"mermaid": "11.16.0",
+		"mermaid": "11.16.1",
 		"posthog-js": "^1.224.0",
 		"pretty-bytes": "^6.1.1",
 		"react": "^18.3.1",
@@ -90,8 +90,8 @@
 		"storybook": "^9.1.17",
 		"tailwindcss": "^4.1.13",
 		"typescript": "^5.7.3",
-		"vite": "^7.1.11",
-		"vitest": "^3.0.5"
+		"vite": "^8.2.2",
+		"vitest": "^4.1.11"
 	},
 	"overrides": {
 		"protobufjs": "7.6.5"
