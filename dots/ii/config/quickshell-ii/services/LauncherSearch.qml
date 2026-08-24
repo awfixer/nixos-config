@@ -299,11 +299,11 @@ Singleton {
             iconType: LauncherSearchResult.IconType.Material,
             execute: () => {
                 let query = StringUtils.cleanPrefix(root.query, Config.options.search.prefix.webSearch);
-                let url = Config.options.search.engineBaseUrl + query;
                 for (let site of Config.options.search.excludedSites) {
-                    url += ` -site:${site}`;
+                    query += ` -site:${site}`;
                 }
-                Qt.openUrlExternally(url);
+                // Native Brave Search window (packages/brave-search) — not the browser
+                Quickshell.execDetached(["brave-search", query]);
             }
         });
         const launcherActionObjects = root.allActions.map(action => {

@@ -10,6 +10,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland // GlobalShortcut lives here on the pinned 0.2.x engine (core-level in 0.3+)
 
 /**
  * Full-screen app launcher grid, opened GNOME-Shell style:
@@ -187,7 +188,7 @@ Scope {
 
                 GridView {
                     id: grid
-                    readonly property list<var> displayedApps: searchInput.text.trim().length > 0 ? AppSearch.fuzzyQuery(searchInput.text.trim()) : AppSearch.list
+                    readonly property var displayedApps: searchInput.text.trim().length > 0 ? AppSearch.fuzzyQuery(searchInput.text.trim()) : AppSearch.list
 
                     Layout.preferredWidth: panelWindow.gridColumns * panelWindow.cellWidth
                     Layout.preferredHeight: contentColumn.parent.height * 0.68
@@ -195,7 +196,7 @@ Scope {
 
                     model: ScriptModel {
                         objectProp: "id"
-                        values: grid.displayedApps
+                        values: [...grid.displayedApps]
                     }
                     cellWidth: panelWindow.cellWidth
                     cellHeight: panelWindow.cellHeight
@@ -230,17 +231,19 @@ Scope {
                         scale: panelWindow.contentShown ? 1 : 0.4
                         opacity: panelWindow.contentShown ? 1 : 0
                         Behavior on scale {
-                            NumberAnimation {
-                                duration: 280
-                                easing.type: Easing.BezierSpline
-                                easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
-                                delay: panelWindow.contentShown ? Math.min(appTile.index * 6, 260) : 0
+                            SequentialAnimation {
+                                PauseAnimation { duration: panelWindow.contentShown ? Math.min(appTile.index * 6, 260) : 0 }
+                                NumberAnimation {
+                                    duration: 280
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
+                                }
                             }
                         }
                         Behavior on opacity {
-                            NumberAnimation {
-                                duration: 220
-                                delay: panelWindow.contentShown ? Math.min(appTile.index * 6, 260) : 0
+                            SequentialAnimation {
+                                PauseAnimation { duration: panelWindow.contentShown ? Math.min(appTile.index * 6, 260) : 0 }
+                                NumberAnimation { duration: 220 }
                             }
                         }
 
