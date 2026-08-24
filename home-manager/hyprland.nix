@@ -153,8 +153,6 @@ in
       -- Apps
       hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty"))
       hl.bind("SUPER + B", hl.dsp.exec_cmd("helium"))
-      -- Bluetooth management moved to kcmshell6 (bluedevil), used by ii panel
-      hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd("kcmshell6 kcm_bluetooth"))
       hl.bind("SUPER + K", hl.dsp.exec_cmd("kraken"))
       hl.bind("SUPER + E", hl.dsp.exec_cmd("nautilus"))
       -- tyyt — GTK YouTube client (symlink: ~/.local/bin/tyyt)
@@ -217,12 +215,8 @@ in
       hl.bind("SUPER + SHIFT + L", hl.dsp.exec_cmd("loginctl lock-session"))
       hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"))
 
-      -- Audio / brightness hardware keys (with non-shell fallbacks).
-      -- No explicit modifiers: these keys are bound bare.
-      hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5"), { locked = true, repeating = true })
-      hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"), { locked = true, repeating = true })
-      hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SINK@ toggle"), { locked = true })
-      hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SOURCE@ toggle"), { locked = true })
+      -- Brightness hardware keys (with non-shell fallback). Audio stack is
+      -- disabled; media keys stay — they drive the Spotify client over MPRIS.
       hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
       hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
       hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })

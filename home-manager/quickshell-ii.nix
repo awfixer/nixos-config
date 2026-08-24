@@ -67,13 +67,11 @@ SH
     python313Packages.kde-material-you-colors
     kdePackages.kdialog
     libqalculate # qalc — searchbar math
-    libcava
     mpvpaper # video wallpapers
     ffmpeg # video wallpaper probe/transcode
     playerctl
     ripgrep
     slurp
-    songrec
     swappy
     translate-shell
     wf-recorder
@@ -170,7 +168,6 @@ in
       # Scripts reach it via ILLOGICAL_IMPULSE_VIRTUAL_ENV + `bin/activate`.
       pkgs.adw-gtk3 # gsettings gtk-theme targets set by switchwall.sh
       pkgs.whitesur-icon-theme # macOS-style icons (kdeglobals [Icons] Theme)
-      pkgs.lxqt.pavucontrol-qt # ii volume-mixer launcher
     ]
     ++ fontPkgs
     ++ runtimeTools;

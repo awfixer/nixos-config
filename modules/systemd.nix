@@ -47,7 +47,7 @@
   };
 
   # ---------------------------------------------------------------------------
-  # Slim background surface (keep display, net, audio, keyring, BT)
+  # Slim background surface (keep display, net, keyring; audio/BT disabled)
   # Optional daemons: enable = false only — leave config for easy re-enable.
   # ---------------------------------------------------------------------------
 
@@ -72,7 +72,7 @@
   services.colord.enable = false;
   services.sysprof.enable = false;
   services.tlp.enable = false;
-  # Bluetooth lives in services.nix (needed for speakers / peripherals).
+  # Audio + Bluetooth are disabled in modules/services.nix (no PipeWire, no bluez).
 
   # Optional noise units.
   systemd.coredump.enable = false;
@@ -123,7 +123,7 @@
   systemd.user.sockets.gcr-ssh-agent.enable = false;
   systemd.user.services.speech-dispatcher.enable = false;
   systemd.user.sockets.speech-dispatcher.enable = lib.mkDefault false;
-  # Bluetooth OBEX (file push) — not needed; pair/A2DP still work without it.
+  # Bluetooth OBEX (file push) — off along with the rest of the BT stack.
   systemd.user.services.obex.enable = false;
 
 }

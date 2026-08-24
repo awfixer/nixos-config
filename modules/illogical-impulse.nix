@@ -38,9 +38,8 @@
   security.pam.services.qs = { };
 
   environment.systemPackages = with pkgs; [
-    # kcmshell6 modules used by the ii network/bluetooth panels:
-    #   kcm_networkmanagement (plasma-nm), kcm_bluetooth (bluedevil)
+    # kcmshell6 module used by the ii network panel:
+    #   kcm_networkmanagement (plasma-nm)
     kdePackages.plasma-nm
-    kdePackages.bluedevil
   ];
 }

@@ -21,7 +21,6 @@
     gnome-calendar # SUPER+C
     gnome-power-manager # gnome-power-statistics (SUPER+SHIFT+P)
     mission-center # task manager (CTRL+SHIFT+ESC, ii default)
-    wireplumber # wpctl for volume keys
     wlogout # fallback session menu when qs is dead (CTRL ALT DEL)
 
     # On-demand only (not session daemons)
