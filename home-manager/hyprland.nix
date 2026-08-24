@@ -1,227 +1,242 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
 
+let
+  # SUPER-release launcher (ii search → fuzzel fallback). Toggling happens on
+  # RELEASE via a release-flagged bind calling the shell's IPC directly — this
+  # avoids the fragile press-arm/interrupt-flag dance across quickshell
+  # components (the portal's onReleased only fires reliably with release binds).
+  superReleaseBinds = ''
+    -- SUPER → ii search, toggles on RELEASE (falls back to fuzzel internally
+    -- via the searchToggleRelease handler when the shell is alive; if qs is
+    -- dead the ipc call is a no-op and fuzzel never launches from here — use
+    -- the explicit fallback below only when qs is not running).
+    hl.bind("SUPER + Super_L", hl.dsp.exec_cmd("qs -c $qsConfig ipc call search toggle || pkill fuzzel || fuzzel"), { release = true, description = "Shell: Toggle search" })
+    hl.bind("SUPER + Super_R", hl.dsp.exec_cmd("qs -c $qsConfig ipc call search toggle || pkill fuzzel || fuzzel"), { release = true, description = "Shell: Toggle search" })
+    -- Fallback launcher when qs is not running (fires on press so it feels instant).
+    hl.bind("SUPER + Super_L", hl.dsp.exec_cmd("qs -c $qsConfig ipc call TEST_ALIVE 2>/dev/null || pkill fuzzel || fuzzel"), { transparent = true })
+    hl.bind("SUPER + Super_R", hl.dsp.exec_cmd("qs -c $qsConfig ipc call TEST_ALIVE 2>/dev/null || pkill fuzzel || fuzzel"), { transparent = true })
+
+    -- SUPER-release also shows workspace numbers while held (upstream parity).
+    hl.bind("Super_L", hl.dsp.global("quickshell:workspaceNumber"), { ignore_mods = true, transparent = true })
+    hl.bind("Super_R", hl.dsp.global("quickshell:workspaceNumber"), { ignore_mods = true, transparent = true })
+  '';
+
+  # Hyprland only allows catchall inside submaps (same as hyprlang). Upstream
+  # ii puts every bind into one permanent "global" submap; this helper wraps a
+  # Lua snippet in that pattern.
+  submapWrap = body: ''
+    hl.define_submap("global", function()
+        ${body}
+    end)
+    hl.on("hyprland.start", function()
+        hl.dispatch(hl.dsp.submap("global"))
+    end)
+  '';
+in
 {
   wayland.windowManager.hyprland = {
     enable = true;
-    # Keep hyprlang settings until we intentionally migrate to Lua configs.
-    configType = "hyprlang";
+    configType = "lua";
     systemd.enable = true;
 
     settings = {
-      # Apple Color LCD was auto-scaling to 2.0 (100% of HiDPI). 1.5 ≈ 75% —
-      # zooms out for more usable logical space (1536×960 vs 1152×720).
-      monitor = [ "eDP-1,preferred,auto,1.5" ];
-
-      # Session env (applies to Hyprland + everything it spawns, incl. qs).
-      # The python venv path comes from home-manager/quickshell-ii.nix.
-      env = [
-        "HYPRCURSOR_THEME,Bibata-Modern-Classic"
-        "HYPRCURSOR_SIZE,24"
-        "qsConfig,ii"
-        "ILLOGICAL_IMPULSE_VIRTUAL_ENV,${config.home.sessionVariables.ILLOGICAL_IMPULSE_VIRTUAL_ENV}"
+      monitor = [
+        {
+          output = "eDP-1";
+          mode = "preferred";
+          position = "auto";
+          scale = 1.5;
+        }
       ];
 
-      general = {
-        gaps_in = 4;
-        gaps_out = 8;
-        border_size = 2;
-        "col.active_border" = "rgba(00ffccaa)";
-        "col.inactive_border" = "rgba(272727aa)";
-        layout = "dwindle";
-      };
+      env = [
+        {
+          _args = [
+            "HYPRCURSOR_THEME"
+            "Bibata-Modern-Classic"
+          ];
+        }
+        {
+          _args = [
+            "HYPRCURSOR_SIZE"
+            "24"
+          ];
+        }
+        {
+          _args = [
+            "qsConfig"
+            "ii"
+          ];
+        }
+        {
+          _args = [
+            "ILLOGICAL_IMPULSE_VIRTUAL_ENV"
+            config.home.sessionVariables.ILLOGICAL_IMPULSE_VIRTUAL_ENV
+          ];
+        }
+      ];
 
-      decoration = {
-        rounding = 8;
-        blur = {
+      # All variable-style settings go through a single hl.config{...} call —
+      # there are no hl.general / hl.decoration / hl.animations functions.
+      config = {
+        general = {
+          gaps_in = 4;
+          gaps_out = 8;
+          border_size = 2;
+          col = {
+            active_border = "rgba(00ffccaa)";
+            inactive_border = "rgba(272727aa)";
+          };
+          layout = "dwindle";
+        };
+
+        decoration = {
+          rounding = 8;
+          blur = {
+            enabled = false;
+          };
+        };
+
+        # Animations off on 8 GiB / m3-6Y30 — less compositor CPU/RAM churn.
+        animations = {
           enabled = false;
         };
-      };
 
-      # Animations off on 8 GiB / m3-6Y30 — less compositor CPU/RAM churn.
-      animations = {
-        enabled = false;
-        animation = [
-          "windows, 1, 3, default"
-          "workspaces, 1, 3, default"
-          "fade, 1, 2, default"
-        ];
-      };
+        input = {
+          kb_layout = "us";
+          follow_mouse = 1;
+          touchpad = {
+            natural_scroll = true;
+          };
+        };
 
-      input = {
-        kb_layout = "us";
-        follow_mouse = 1;
-        touchpad = {
-          natural_scroll = true;
+        dwindle = {
+          preserve_split = true;
+        };
+
+        misc = {
+          disable_hyprland_logo = true;
+          disable_splash_rendering = true;
+          force_default_wallpaper = 0;
         };
       };
 
-      # Hyprland 0.55+: dwindle.pseudotile removed; preserve_split is still valid
-      dwindle = {
-        preserve_split = true;
+      gesture = {
+        fingers = 3;
+        direction = "horizontal";
+        action = "workspace";
       };
 
-      misc = {
-        disable_hyprland_logo = true;
-        disable_splash_rendering = true;
-        force_default_wallpaper = 0;
-      };
-
-      # illogical-impulse session daemons:
-      #   qs            → whole desktop shell (bar, sidebars, launcher,
-      #                   notifications, lock, polkit, wallpaper, OSD)
-      #   wl-paste ×2   → cliphist history + live updates in the shell UI
-      #   dbus-update   → make systemd user units see WAYLAND_DISPLAY etc.
-      # Keyring is dbus-activated (services.gnome.gnome-keyring), easyeffects
-      # runs as a HM user service, polkit agent comes from inside qs itself.
-      exec-once = [
-        "qs -c $qsConfig"
-        "wl-paste --type text --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'"
-        "wl-paste --type image --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'"
-        "dbus-update-activation-environment --all"
-        "sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+      # illogical-impulse session daemons (qs → whole desktop shell, wl-paste ×2
+      # → cliphist, dbus-update → systemd user units see WAYLAND_DISPLAY).
+      # Autostart in Lua mode: hl.on("hyprland.start", function() ... end) —
+      # there is no exec-once function in the Lua API. _args renders a
+      # multi-argument call; mkLuaInline emits the callback as raw Lua.
+      on = [
+        {
+          _args = [
+            "hyprland.start"
+            (lib.generators.mkLuaInline ''
+              function() hl.exec_cmd('qs -c $qsConfig') end
+            '')
+          ];
+        }
       ];
     };
 
-    # All binds live inside the permanent "global" submap, mirroring upstream
-    # illogical-impulse keybinds.conf: catchall is only valid inside submaps,
-    # and the SUPER-release launcher needs a transparent non-consuming catchall
-    # (binditn) to cancel itself when other keys are pressed during the hold.
-    # extraConfig is emitted after the settings above; binds after a
-    # `submap =` line belong to that submap, and the trailing exec re-enters it
-    # after config reloads reset the active submap to default.
-    extraConfig = ''
-      submap = global
+    extraLuaFiles.bindings.content = submapWrap ''
+      -- Apps
+      hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty"))
+      hl.bind("SUPER + B", hl.dsp.exec_cmd("helium"))
+      -- Bluetooth management moved to kcmshell6 (bluedevil), used by ii panel
+      hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd("kcmshell6 kcm_bluetooth"))
+      hl.bind("SUPER + K", hl.dsp.exec_cmd("kraken"))
+      hl.bind("SUPER + E", hl.dsp.exec_cmd("nautilus"))
+      -- tyyt — GTK YouTube client (symlink: ~/.local/bin/tyyt)
+      hl.bind("SUPER + Y", hl.dsp.exec_cmd("/home/awfixer/.local/bin/tyyt"))
 
-      # SUPER → ii search (falls back to fuzzel internally), toggling on RELEASE:
-      # arming happens on PRESS; the catchall interrupt clears the flag whenever
-      # another key/button is pressed during the hold, so chords like SUPER+N no
-      # longer open the launcher on release.
-      bindid = SUPER, Super_L, Toggle search, global, quickshell:searchToggleRelease
-      bindid = SUPER, Super_R, Toggle search, global, quickshell:searchToggleRelease
-      # Fallback launcher when the shell is not running.
-      bind = SUPER, Super_L, exec, qs -c $qsConfig ipc call TEST_ALIVE || pkill fuzzel || fuzzel
-      bind = SUPER, Super_R, exec, qs -c $qsConfig ipc call TEST_ALIVE || pkill fuzzel || fuzzel
-      # Cancel SUPER-release arming whenever another key/button is pressed.
-      # No description field here: binditn (unlike bindid/bindd) parses the
-      # third field as the dispatcher.
-      binditn = SUPER, catchall, global, quickshell:searchToggleReleaseInterrupt
-      # Modifier presses bypass the key catchall — clear the arm flag explicitly.
-      bind = CTRL, Super_L, global, quickshell:searchToggleReleaseInterrupt
-      bind = CTRL, Super_R, global, quickshell:searchToggleReleaseInterrupt
-      # Mouse buttons/drags under SUPER must not arm the launcher either.
-      bind = SUPER, mouse:272, global, quickshell:searchToggleReleaseInterrupt
-      bind = SUPER, mouse:273, global, quickshell:searchToggleReleaseInterrupt
-      bind = SUPER, mouse_up, global, quickshell:searchToggleReleaseInterrupt
-      bind = SUPER, mouse_down, global, quickshell:searchToggleReleaseInterrupt
+      -- Shell surfaces
+      hl.bind("SUPER + O", hl.dsp.global("quickshell:sidebarLeftToggle"), { description = "Shell: Toggle left sidebar" })
+      hl.bind("SUPER + N", hl.dsp.global("quickshell:sidebarRightToggle"), { description = "Shell: Toggle right sidebar" })
+      hl.bind("SUPER + Tab", hl.dsp.global("quickshell:overviewWorkspacesToggle"), { description = "Shell: Toggle overview" })
+      hl.bind("SUPER + Period", hl.dsp.global("quickshell:overviewEmojiToggle"), { description = "Shell: Emoji picker" })
+      hl.bind("SUPER + Slash", hl.dsp.global("quickshell:cheatsheetToggle"), { description = "Shell: Toggle cheatsheet" })
+      hl.bind("SUPER + M", hl.dsp.global("quickshell:mediaControlsToggle"), { description = "Shell: Toggle media controls" })
+      hl.bind("SUPER + G", hl.dsp.global("quickshell:overlayToggle"), { description = "Shell: Toggle widget overlay" })
+      hl.bind("CTRL + ALT + Delete", hl.dsp.global("quickshell:sessionToggle"), { description = "Shell: Toggle session menu" })
 
-      bindit = , Super_L, global, quickshell:workspaceNumber
-      bindit = , Super_R, global, quickshell:workspaceNumber
+      -- Launcher app / wallpaper / theming
+      hl.bind("SUPER + I", hl.dsp.exec_cmd("qs -p $HOME/.config/quickshell/$qsConfig/settings.qml"))
+      hl.bind("CTRL + SUPER + T", hl.dsp.global("quickshell:wallpaperSelectorToggle"), { description = "Shell: Change wallpaper" })
+      hl.bind("CTRL + SUPER + ALT + T", hl.dsp.global("quickshell:wallpaperSelectorRandom"))
+      hl.bind("CTRL + SUPER + SHIFT + D", hl.dsp.global("quickshell:toggleLightDark"), { description = "Shell: Toggle light/dark mode" })
 
-      # Apps
-      bind = SUPER, Return, exec, ghostty
-      bind = SUPER, B, exec, helium
-      # Bluetooth management moved to kcmshell6 (bluedevil), used by ii panel
-      bind = SUPER SHIFT, B, exec, kcmshell6 kcm_bluetooth
-      bindd = SUPER, K, Toggle on-screen keyboard, global, quickshell:oskToggle
-      bind = SUPER, E, exec, nautilus
-      # tyyt — GTK YouTube client (symlink: ~/.local/bin/tyyt)
-      bind = SUPER, Y, exec, /home/awfixer/.local/bin/tyyt
+      -- Utilities — snip/search/OCR/translate/record/color pick
+      -- Screenshots stay on the user's grim+slurp+satty scripts (screenshots.nix)
+      hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("screenshot-region"))
+      hl.bind("SUPER + SHIFT + F", hl.dsp.exec_cmd("screenshot-full"))
+      hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("screenshot-window"))
+      hl.bind("SUPER + SHIFT + A", hl.dsp.global("quickshell:regionSearch"), { description = "Shell: Region search" })
+      hl.bind("SUPER + SHIFT + X", hl.dsp.global("quickshell:regionOcr"), { description = "Shell: Region OCR" })
+      hl.bind("SUPER + SHIFT + T", hl.dsp.global("quickshell:screenTranslate"), { description = "Shell: Screen translate" })
+      hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))
+      hl.bind("SUPER + SHIFT + R", hl.dsp.global("quickshell:regionRecord"), { description = "Shell: Region record" })
+      hl.bind("CTRL + ALT + R", hl.dsp.global("quickshell:regionRecordWithSound"), { description = "Shell: Record with sound" })
 
-      # Shell surfaces
-      bindd = SUPER, O, Toggle left sidebar, global, quickshell:sidebarLeftToggle
-      bindd = SUPER, N, Toggle right sidebar, global, quickshell:sidebarRightToggle
-      bindd = SUPER, Tab, Toggle overview, global, quickshell:overviewWorkspacesToggle
-      bindd = SUPER, Period, Emoji >> clipboard, global, quickshell:overviewEmojiToggle
-      bindd = SUPER, Slash, Toggle cheatsheet, global, quickshell:cheatsheetToggle
-      bindd = SUPER, M, Toggle media controls, global, quickshell:mediaControlsToggle
-      bindd = SUPER, G, Toggle widget overlay, global, quickshell:overlayToggle
-      bindd = CTRL ALT, Delete, Toggle session menu, global, quickshell:sessionToggle
+      -- Window management
+      hl.bind("SUPER + Q", hl.dsp.window.close())
+      hl.bind("SUPER + F", hl.dsp.window.fullscreen())
+      hl.bind("SUPER + ALT + Space", hl.dsp.window.float({ action = "toggle" }))
+      hl.bind("SUPER + T", hl.dsp.layout("togglesplit"))
 
-      # Launcher app / wallpaper / theming
-      bind = SUPER, I, exec, qs -p ~/.config/quickshell/$qsConfig/settings.qml
-      bindd = CTRL SUPER, T, Change wallpaper, global, quickshell:wallpaperSelectorToggle
-      bind = CTRL SUPER ALT, T, global, quickshell:wallpaperSelectorRandom
-      bindd = CTRL SUPER SHIFT, D, Toggle light/dark mode, global, quickshell:toggleLightDark
+      -- Focus
+      hl.bind("SUPER + left", hl.dsp.focus({ direction = "left" }))
+      hl.bind("SUPER + right", hl.dsp.focus({ direction = "right" }))
+      hl.bind("SUPER + up", hl.dsp.focus({ direction = "up" }))
+      hl.bind("SUPER + down", hl.dsp.focus({ direction = "down" }))
+      hl.bind("SUPER + H", hl.dsp.focus({ direction = "left" }))
+      hl.bind("SUPER + L", hl.dsp.focus({ direction = "right" }))
+      hl.bind("SUPER + J", hl.dsp.focus({ direction = "down" }))
 
-      # Utilities — snip/search/OCR/translate/record/color pick
-      # Screenshots stay on the user's grim+slurp+satty scripts (screenshots.nix)
-      bind = SUPER SHIFT, S, exec, screenshot-region
-      bind = SUPER SHIFT, F, exec, screenshot-full
-      bind = SUPER SHIFT, W, exec, screenshot-window
-      bindd = SUPER SHIFT, A, Region search, global, quickshell:regionSearch
-      bindd = SUPER SHIFT, X, Region OCR, global, quickshell:regionOcr
-      bindd = SUPER SHIFT, T, Screen translate, global, quickshell:screenTranslate
-      bind = SUPER SHIFT, C, exec, hyprpicker -a
-      bindd = SUPER SHIFT, R, Region record, global, quickshell:regionRecord
-      bindd = CTRL ALT, R, Region record with sound, global, quickshell:regionRecordWithSound
+      -- Workspaces
+      for i = 1, 5 do
+          hl.bind("SUPER + " .. i, hl.dsp.focus({ workspace = i }))
+          hl.bind("SUPER + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+      end
 
-      # Window management
-      bind = SUPER, Q, killactive,
-      bind = SUPER, F, fullscreen,
-      bind = SUPER ALT, Space, togglefloating, # was SUPER,V before ii clipboard overview
-      # layoutmsg is required on Hyprland 0.55+ (togglesplit is not a top-level dispatcher)
-      bind = SUPER, T, layoutmsg, togglesplit
+      -- Mouse workspace scroll
+      hl.bind("SUPER + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
+      hl.bind("SUPER + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 
-      # Focus
-      bind = SUPER, left, movefocus, l
-      bind = SUPER, right, movefocus, r
-      bind = SUPER, up, movefocus, u
-      bind = SUPER, down, movefocus, d
-      bind = SUPER, H, movefocus, l
-      bind = SUPER, L, movefocus, r
-      bind = SUPER, J, movefocus, d
+      -- Session
+      hl.bind("SUPER + SHIFT + L", hl.dsp.exec_cmd("loginctl lock-session"))
+      hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"))
 
-      # Workspaces
-      bind = SUPER, 1, workspace, 1
-      bind = SUPER, 2, workspace, 2
-      bind = SUPER, 3, workspace, 3
-      bind = SUPER, 4, workspace, 4
-      bind = SUPER, 5, workspace, 5
-      bind = SUPER SHIFT, 1, movetoworkspace, 1
-      bind = SUPER SHIFT, 2, movetoworkspace, 2
-      bind = SUPER SHIFT, 3, movetoworkspace, 3
-      bind = SUPER SHIFT, 4, movetoworkspace, 4
-      bind = SUPER SHIFT, 5, movetoworkspace, 5
+      -- Audio / brightness hardware keys (with non-shell fallbacks).
+      -- No explicit modifiers: these keys are bound bare.
+      hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5"), { locked = true, repeating = true })
+      hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"), { locked = true, repeating = true })
+      hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SINK@ toggle"), { locked = true })
+      hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_SOURCE@ toggle"), { locked = true })
+      hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+      hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+      hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
+      hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
+      hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("qs -c $qsConfig ipc call brightness increment || brightnessctl s 5%+"), { locked = true, repeating = true })
+      hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs -c $qsConfig ipc call brightness decrement || brightnessctl s 5%-"), { locked = true, repeating = true })
 
-      # Mouse workspace scroll
-      bind = SUPER, mouse_down, workspace, e+1
-      bind = SUPER, mouse_up, workspace, e-1
+      -- Mouse-held window management
+      hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
+      hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
-      # Three-finger touchpad swipe between workspaces
-      gesture = 3, horizontal, workspace
-
-      # Session
-      bind = SUPER SHIFT, L, exec, loginctl lock-session
-      bind = SUPER ALT, P, exec, systemctl suspend || loginctl suspend
-
-      # Audio / brightness hardware keys (with non-shell fallbacks).
-      # Empty mod field: XF86 keys have no modifiers; without it Hyprland
-      # parses the command itself as the dispatcher ("invalid dispatcher").
-      bind = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5
-      bind = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-
-      bind = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_SINK@ toggle
-      bind = , XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_SOURCE@ toggle
-      bind = , XF86AudioPlay, exec, playerctl play-pause
-      bind = , XF86AudioPause, exec, playerctl play-pause
-      bind = , XF86AudioNext, exec, playerctl next
-      bind = , XF86AudioPrev, exec, playerctl previous
-      bind = , XF86MonBrightnessUp, exec, qs -c $qsConfig ipc call brightness increment || brightnessctl s 5%+
-      bind = , XF86MonBrightnessDown, exec, qs -c $qsConfig ipc call brightness decrement || brightnessctl s 5%-
-
-      # Mouse-held window management
-      bindm = SUPER, mouse:272, movewindow
-      bindm = SUPER, mouse:273, resizewindow
-
-      # Enter the global submap for the session (binds declared above stay
-      # bound to it; this only switches which submap is active).
-      exec = hyprctl dispatch submap global
+      ${superReleaseBinds}
     '';
   };
-
   # Portals for screenshare / file pickers (Vesktop, browsers, Flatpak).
   # Hyprland implements ScreenCast + Screenshot; GTK covers FileChooser etc.
   # Session desktop is "Hyprland" → config.hyprland writes hyprland-portals.conf

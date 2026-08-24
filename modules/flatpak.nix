@@ -24,7 +24,7 @@
     # flatpak-managed-install.service on every activation.
     packages = [
       { appId = "io.github.brunofin.Cohesion"; origin = "flathub"; }
-      { appId = "com.kagi.orion"; origin = "orion-beta"; }
+      { appId = "com.kagi.OrionGtk"; origin = "orion-beta"; }
     ];
   };
 }
