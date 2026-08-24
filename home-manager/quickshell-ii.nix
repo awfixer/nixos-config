@@ -211,9 +211,6 @@ in
     };
   };
 
-  # execs.lua starts easyeffects in service mode for per-app audio effects.
-  services.easyeffects.enable = true;
-
   # Fonts must be discoverable by Qt/fontconfig in this session.
   fonts.fontconfig.enable = true;
 }

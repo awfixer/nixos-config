@@ -76,7 +76,7 @@ let
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
     # Update from the "got:" line of the failed first build.
-    outputHash = "sha256-T5svQeh+bG2Wcm7m9qEwjbr8is1/dmHcZiOqQGbs85I=";
+    outputHash = "sha256-GBtu0VqVNZTN8TzJsD+utN5SO3g1QhrJkvm7bOB8LEw=";
   };
 in
 stdenvNoCC.mkDerivation {
