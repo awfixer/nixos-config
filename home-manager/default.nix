@@ -60,6 +60,7 @@
     #./zen-browser.nix
     ./cursor.nix
     ./cline.nix
+    ./brave-search.nix
     ./t3-code.nix
     ./ghostty.nix
     #./windscribe.nix

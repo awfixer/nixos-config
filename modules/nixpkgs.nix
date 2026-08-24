@@ -11,6 +11,7 @@
       kraken-desktop = final.callPackage ../packages/kraken { };
       vela-cli = final.callPackage ../packages/vela { };
       t3-code = final.callPackage ../packages/t3-code { };
+      brave-search = final.callPackage ../packages/brave-search { };
       #orion-browser = final.callPackage ../packages/orion { };
       #zen-browser = final.callPackage ../packages/zen-browser { };
       #windscribe = final.callPackage ../packages/windscribe { };

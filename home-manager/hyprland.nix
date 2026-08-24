@@ -155,6 +155,8 @@ in
       hl.bind("SUPER + B", hl.dsp.exec_cmd("helium"))
       hl.bind("SUPER + K", hl.dsp.exec_cmd("kraken"))
       hl.bind("SUPER + E", hl.dsp.exec_cmd("nautilus"))
+      -- Brave Search — chromeless WebKit window (packages/brave-search)
+      hl.bind("SUPER + D", hl.dsp.exec_cmd("brave-search"))
       -- tyyt — GTK YouTube client (symlink: ~/.local/bin/tyyt)
       hl.bind("SUPER + Y", hl.dsp.exec_cmd("/home/awfixer/.local/bin/tyyt"))
 

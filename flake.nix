@@ -71,6 +71,7 @@
           t3-code = pkgs.callPackage ./packages/t3-code { };
           cline = pkgs.callPackage ./packages/ai-daemon { };
           kanban = pkgs.callPackage ./packages/kanban { };
+          brave-search = pkgs.callPackage ./packages/brave-search { };
           open-design-daemon = open-design.packages.${system}.daemon;
           open-design-web = open-design.packages.${system}.web;
           #orion-browser = pkgs.callPackage ./packages/orion { };
