@@ -507,13 +507,8 @@ Singleton {
                 property JsonObject ai: JsonObject {
                     property bool textFadeIn: false
                 }
-                property JsonObject booru: JsonObject {
-                    property bool allowNsfw: false
-                    property string defaultProvider: "yandere"
-                    property int limit: 20
-                    property JsonObject zerochan: JsonObject {
-                        property string username: "[unset]"
-                    }
+                property JsonObject ask: JsonObject {
+                    property bool enable: true
                 }
                 property JsonObject cornerOpen: JsonObject {
                     property bool enable: true

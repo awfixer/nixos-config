@@ -65,11 +65,11 @@ const c = struct {
     extern fn webkit_web_view_get_settings(web_view: *WebKitWebView) *WebKitSettings;
     extern fn webkit_settings_set_user_agent(settings: *WebKitSettings, user_agent: [*:0]const u8) void;
     extern fn webkit_policy_decision_ignore(decision: *WebKitPolicyDecision) void;
-    extern fn webkit_navigation_policy_decision_get_navigation_action(decision: *WebKitNavigationPolicyDecision) *WebKitNavigationAction;
-    extern fn webkit_navigation_action_get_request(action: *WebKitNavigationAction) *WebKitURIRequest;
+    extern fn webkit_navigation_policy_decision_get_navigation_action(decision: *WebKitNavigationPolicyDecision) ?*WebKitNavigationAction;
+    extern fn webkit_navigation_action_get_request(action: *WebKitNavigationAction) ?*WebKitURIRequest;
     extern fn webkit_navigation_action_get_mouse_button(action: *WebKitNavigationAction) guint;
     extern fn webkit_navigation_action_get_modifiers(action: *WebKitNavigationAction) guint;
-    extern fn webkit_uri_request_get_uri(request: *WebKitURIRequest) [*:0]const u8;
+    extern fn webkit_uri_request_get_uri(request: *WebKitURIRequest) ?[*:0]const u8;
 
     extern fn g_signal_connect_data(
         instance: ?*anyopaque,
@@ -93,8 +93,11 @@ const c = struct {
     const G_APPLICATION_HANDLES_COMMAND_LINE: c_int = 1 << 3;
     const GDK_CONTROL_MASK: guint = 1 << 2;
     const GDK_KEY_F11: guint = 0xffc8;
-    const POLICY_NAVIGATION_ACTION: guint = 1;
-    const POLICY_NEW_WINDOW_ACTION: guint = 2;
+    // WebKitPolicyDecisionType values from WebKitWebView.h (6.0 ABI — the old
+    // UNKNOWN entry was dropped, so NAVIGATION_ACTION is 0 here).
+    const POLICY_NAVIGATION_ACTION: guint = 0;
+    const POLICY_NEW_WINDOW_ACTION: guint = 1;
+    const POLICY_RESPONSE: guint = 2;
 };
 
 const app_id = "com.awfixer.BraveSearch";
@@ -282,31 +285,30 @@ fn onDecidePolicy(
     _ = web_view;
     _ = user_data;
     if (decision == null) return 0;
+    if (decision_type != c.POLICY_NAVIGATION_ACTION and decision_type != c.POLICY_NEW_WINDOW_ACTION)
+        return 0; // RESPONSE etc. → default handling (render / download)
+
+    const nav: *c.WebKitNavigationPolicyDecision = @ptrCast(decision.?);
+    const action = c.webkit_navigation_policy_decision_get_navigation_action(nav) orelse return 0;
+    const request = c.webkit_navigation_action_get_request(action) orelse return 0;
+    const uri_c = c.webkit_uri_request_get_uri(request) orelse return 0;
+    const uri = std.mem.sliceTo(uri_c, 0);
 
     if (decision_type == c.POLICY_NEW_WINDOW_ACTION) {
-        const nav: *c.WebKitNavigationPolicyDecision = @ptrCast(decision.?);
-        const action = c.webkit_navigation_policy_decision_get_navigation_action(nav);
-        const request = c.webkit_navigation_action_get_request(action);
-        openExternally(std.mem.sliceTo(c.webkit_uri_request_get_uri(request), 0));
+        // target=_blank and friends go to the system browser.
+        openExternally(uri);
         c.webkit_policy_decision_ignore(decision.?);
         return 1;
     }
 
-    if (decision_type == c.POLICY_NAVIGATION_ACTION) {
-        const nav: *c.WebKitNavigationPolicyDecision = @ptrCast(decision.?);
-        const action = c.webkit_navigation_policy_decision_get_navigation_action(nav);
-        const request = c.webkit_navigation_action_get_request(action);
-        const uri = std.mem.sliceTo(c.webkit_uri_request_get_uri(request), 0);
-
-        // Middle-click or Ctrl-click always goes to the system browser;
-        // plain clicks stay in-app while they remain on the search site.
-        const button = c.webkit_navigation_action_get_mouse_button(action);
-        const modifiers = c.webkit_navigation_action_get_modifiers(action);
-        if (button == 2 or (modifiers & c.GDK_CONTROL_MASK) != 0 or !isInternalUri(uri)) {
-            openExternally(uri);
-            c.webkit_policy_decision_ignore(decision.?);
-            return 1;
-        }
+    // Middle-click or Ctrl-click always goes to the system browser; plain
+    // clicks stay in-app while they remain on the search site.
+    const button = c.webkit_navigation_action_get_mouse_button(action);
+    const modifiers = c.webkit_navigation_action_get_modifiers(action);
+    if (button == 2 or (modifiers & c.GDK_CONTROL_MASK) != 0 or !isInternalUri(uri)) {
+        openExternally(uri);
+        c.webkit_policy_decision_ignore(decision.?);
+        return 1;
     }
     return 0;
 }
