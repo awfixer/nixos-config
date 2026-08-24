@@ -15,6 +15,14 @@ Singleton {
     readonly property string city: Config.options.bar.weather.city
     readonly property bool useUSCS: Config.options.bar.weather.useUSCS
     property bool gpsActive: Config.options.bar.weather.enableGPS
+    // No point polling the API or holding a geoclue session when no widget displays the data.
+    readonly property bool weatherEnabled:
+        Config.options.bar.weather.enable || Config.options.background.widgets.weather.enable
+
+    onWeatherEnabledChanged: {
+        if (root.weatherEnabled && root.gpsActive)
+            positionSource.start()
+    }
 
     onUseUSCSChanged: {
         root.getData();
@@ -81,6 +89,7 @@ Singleton {
     }
 
     function getData() {
+        if (!root.weatherEnabled) return;
         let command = "curl -s wttr.in";
 
         if (root.gpsActive && root.location.valid) {
@@ -103,7 +112,7 @@ Singleton {
     }
 
     Component.onCompleted: {
-        if (!root.gpsActive) return;
+        if (!root.gpsActive || !root.weatherEnabled) return;
         console.info("[WeatherService] Starting the GPS service.");
         positionSource.start();
     }
@@ -158,10 +167,10 @@ Singleton {
     }
 
     Timer {
-        running: !root.gpsActive
+        running: !root.gpsActive && root.weatherEnabled
         repeat: true
         interval: root.fetchInterval
-        triggeredOnStart: !root.gpsActive
+        triggeredOnStart: !root.gpsActive && root.weatherEnabled
         onTriggered: root.getData()
     }
 }

@@ -125,7 +125,10 @@ SH
       installPhase = ''
         runHook preInstall
         mkdir -p $out/bin
+        # QT_LOGGING_RULES drops Qt/QML debug spam (binding loops, etc.) from the
+        # journal; warnings and errors still get through.
         makeWrapper ${qsBase}/bin/qs $out/bin/qs \
+          --set QT_LOGGING_RULES "*.debug=false" \
           --prefix XDG_DATA_DIRS : ${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name} \
           --prefix PATH : ${lib.makeBinPath runtimeTools}
         runHook postInstall
