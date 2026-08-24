@@ -69,6 +69,7 @@
           kraken-desktop = pkgs.callPackage ./packages/kraken { };
           vela-cli = pkgs.callPackage ./packages/vela { };
           t3-code = pkgs.callPackage ./packages/t3-code { };
+          cline = pkgs.callPackage ./packages/ai-daemon { };
           open-design-daemon = open-design.packages.${system}.daemon;
           open-design-web = open-design.packages.${system}.web;
           #orion-browser = pkgs.callPackage ./packages/orion { };

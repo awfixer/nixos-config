@@ -1,0 +1,120 @@
+{
+  "name": "kanban",
+  "version": "0.1.70",
+  "description": "A kanban foundation for coding agents",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "kanban",
+    "agents",
+    "cli",
+    "task-management",
+    "typescript"
+  ],
+  "homepage": "https://github.com/cline/kanban",
+  "bugs": {
+    "url": "https://github.com/cline/kanban/issues"
+  },
+  "author": "Cline",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cline/kanban"
+  },
+  "type": "module",
+  "bin": {
+    "kanban": "dist/cli.js"
+  },
+  "man": "./man/kanban.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "man",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "shx rm -rf dist coverage",
+    "install:all": "npm install && npm --prefix web-ui install && npm --prefix packages/desktop install",
+    "build": "npm run clean && npm run web:build && node scripts/build.mjs && shx mkdir -p dist/web-ui && shx cp -r web-ui/dist/* dist/web-ui && node scripts/upload-sentry-sourcemaps.mjs && shx chmod +x dist/cli.js",
+    "dogfood": "node scripts/dogfood.mjs",
+    "link": "npm run build && npm link",
+    "unlink": "npm unlink -g kanban",
+    "dev": "NODE_ENV=development tsx watch src/cli.ts",
+    "dev:full": "node scripts/dev-full.mjs",
+    "web:dev": "npm --prefix web-ui run dev",
+    "web:build": "npm --prefix web-ui run build",
+    "web:typecheck": "npm --prefix web-ui run typecheck",
+    "web:test": "npm --prefix web-ui run test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "npx @biomejs/biome lint src test web-ui/src web-ui/tests vitest.config.ts web-ui/vite.config.ts web-ui/vitest.config.ts web-ui/playwright.config.ts",
+    "format": "npx @biomejs/biome check --write .",
+    "check": "npx @biomejs/biome check . && npm run typecheck && npm run test",
+    "test": "vitest run",
+    "test:fast": "vitest run test/runtime test/utilities",
+    "test:integration": "vitest run test/integration",
+    "test:precommit": "npm run test:fast",
+    "test:watch": "vitest",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build && npm run check"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.5",
+    "@sentry/cli": "^3.3.3",
+    "@types/node": "^22.10.5",
+    "@types/proper-lockfile": "^4.1.4",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.27.4",
+    "husky": "^9.1.7",
+    "shx": "^0.4.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  },
+  "optionalDependencies": {
+    "@biomejs/cli-linux-arm64": "2.3.5",
+    "@biomejs/cli-linux-arm64-musl": "2.3.5",
+    "@biomejs/cli-linux-x64": "2.3.5",
+    "@biomejs/cli-linux-x64-musl": "2.3.5",
+    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.9"
+  },
+  "dependencies": {
+    "@clinebot/core": "^0.0.38",
+    "@clinebot/shared": "^0.0.38",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@sentry/node": "^10.45.0",
+    "@trpc/client": "^11.11.0",
+    "@trpc/server": "^11.11.0",
+    "@xterm/addon-serialize": "^0.14.0",
+    "@xterm/headless": "^6.0.0",
+    "commander": "^14.0.3",
+    "node-pty": "^1.2.0-beta.11",
+    "open": "^11.0.0",
+    "ora": "^9.3.0",
+    "proper-lockfile": "^4.1.2",
+    "tree-kill": "^1.2.2",
+    "undici": "^6.27.0",
+    "ws": "^8.21.0",
+    "zod": "^4.3.6"
+  },
+  "overrides": {
+    "protobufjs": ">=7.6.1 <8",
+    "simple-git": ">=3.36.0",
+    "fast-uri": ">=3.1.5 <4",
+    "hono": ">=4.12.34 <5",
+    "@hono/node-server": ">=1.14.0",
+    "nanoid@>=5.0.0 <6": ">=5.1.11 <6"
+  }
+}
