@@ -1,1 +1,0 @@
-/tmp/hylive/hypr/hyprland.lua
