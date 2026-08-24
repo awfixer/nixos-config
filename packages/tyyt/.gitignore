@@ -6,7 +6,3 @@
 *.swp
 *~
 .firecrawl/
-
-# Vendored tools must stay in the tree — do not ignore vendor/
-!vendor/
-!vendor/**

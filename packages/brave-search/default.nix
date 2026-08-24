@@ -6,8 +6,10 @@
   autoPatchelfHook,
   copyDesktopItems,
   makeDesktopItem,
+  makeWrapper,
   gtk4,
   webkitgtk_6_0,
+  glib-networking,
 }:
 
 stdenv.mkDerivation {
@@ -22,14 +24,23 @@ stdenv.mkDerivation {
     pkg-config
     autoPatchelfHook
     copyDesktopItems
+    makeWrapper
   ];
 
   buildInputs = [
     gtk4
     webkitgtk_6_0
+    # Provides the GIO TLS module — without it every https:// load fails
+    # with WebKit's "TLS not available" error.
+    glib-networking
   ];
 
   dontConfigure = true;
+
+  postFixup = ''
+    wrapProgram "$out/bin/brave-search" \
+      --set GIO_MODULE_DIR "${glib-networking}/lib/gio/modules"
+  '';
 
   buildPhase = ''
     runHook preBuild

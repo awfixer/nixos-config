@@ -61,6 +61,9 @@
               cargo-edit
               cargo-watch
               rust-analyzer
+              # Runtime dependencies for `cargo run`.
+              yt-dlp
+              mpv
               self.formatter.${system}
             ];
 

@@ -307,17 +307,15 @@ impl Drop for Player {
     }
 }
 
-/// Resolve path to mpv without consulting PATH.
+/// Resolve path to mpv.
 ///
 /// `env_override`: value of TYYT_MPV if set.
-/// `vendor_compile`: compile-time TYYT_VENDOR_MPV_BIN if any.
-/// `exe_dir`: parent of current executable if known.
-/// `cwd_roots`: directories to probe for vendor/bin/mpv (usually "." and "..").
+/// `exe_dir`: parent of current executable if known (packaged wrapper layout).
+/// `path_dirs`: directories from `PATH` for the system mpv.
 fn resolve_mpv_path(
     env_override: Option<&str>,
-    vendor_compile: Option<&str>,
     exe_dir: Option<&Path>,
-    cwd_roots: &[&Path],
+    path_dirs: &[PathBuf],
 ) -> Result<PathBuf> {
     if let Some(p) = env_override {
         let path = PathBuf::from(p);
@@ -339,39 +337,27 @@ fn resolve_mpv_path(
         }
     }
 
-    if let Some(bin) = vendor_compile {
-        let path = PathBuf::from(bin);
-        if path.is_file() {
-            return Ok(path);
-        }
-    }
-
-    for root in cwd_roots {
-        let bin = root.join("vendor/bin/mpv");
+    for dir in path_dirs {
+        let bin = dir.join("mpv");
         if bin.is_file() {
-            return Ok(bin.canonicalize().unwrap_or(bin));
+            return Ok(bin);
         }
     }
 
     bail!(
-        "vendored mpv not found. Expected vendor/bin/mpv (run ./scripts/update-mpv.sh), \
-         or set TYYT_MPV to an mpv binary."
+        "mpv not found. Install system mpv, or set TYYT_MPV to an mpv binary."
     )
 }
 
 fn mpv_bin() -> Result<String> {
     let env_override = std::env::var("TYYT_MPV").ok();
-    let vendor_compile = option_env!("TYYT_VENDOR_MPV_BIN");
     let exe_dir = std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|d| d.to_path_buf()));
-    let roots = [Path::new("."), Path::new("..")];
-    let path = resolve_mpv_path(
-        env_override.as_deref(),
-        vendor_compile,
-        exe_dir.as_deref(),
-        &roots,
-    )?;
+    let path_dirs: Vec<PathBuf> = std::env::var_os("PATH")
+        .map(|p| std::env::split_paths(&p).collect())
+        .unwrap_or_default();
+    let path = resolve_mpv_path(env_override.as_deref(), exe_dir.as_deref(), &path_dirs)?;
     info!(path = %path.display(), "using mpv");
     Ok(path.to_string_lossy().into_owned())
 }
@@ -415,30 +401,16 @@ mod tests {
         let tmp = tempfile_dir();
         let custom = tmp.join("custom-mpv");
         touch_exe(&custom);
-        let got = resolve_mpv_path(
-            Some(custom.to_str().unwrap()),
-            Some("/nonexistent/vendor"),
-            None,
-            &[],
-        )
-        .unwrap();
+        let got =
+            resolve_mpv_path(Some(custom.to_str().unwrap()), None, &[]).unwrap();
         assert_eq!(got, custom);
     }
 
     #[test]
     fn env_override_missing_errors() {
-        let err = resolve_mpv_path(Some("/no/such/mpv-tyyt-test"), None, None, &[]).unwrap_err();
+        let err = resolve_mpv_path(Some("/no/such/mpv-tyyt-test"), None, &[]).unwrap_err();
         let msg = format!("{err:#}");
         assert!(msg.contains("TYYT_MPV") || msg.contains("/no/such/mpv-tyyt-test"));
-    }
-
-    #[test]
-    fn vendor_compile_used_when_present() {
-        let tmp = tempfile_dir();
-        let vend = tmp.join("vendor-bin-mpv");
-        touch_exe(&vend);
-        let got = resolve_mpv_path(None, Some(vend.to_str().unwrap()), None, &[]).unwrap();
-        assert_eq!(got, vend);
     }
 
     #[test]
@@ -449,17 +421,40 @@ mod tests {
         fs::create_dir_all(&bin_dir).unwrap();
         let mpv = tmp.join("libexec/tyyt/mpv");
         touch_exe(&mpv);
-        let got = resolve_mpv_path(None, None, Some(&bin_dir), &[]).unwrap();
+        let got = resolve_mpv_path(None, Some(&bin_dir), &[]).unwrap();
         assert_eq!(got, mpv);
     }
 
     #[test]
-    fn cwd_vendor_bin() {
+    fn packaged_wrapper_preferred_over_path() {
         let tmp = tempfile_dir();
-        let mpv = tmp.join("vendor/bin/mpv");
+        let bin_dir = tmp.join("bin");
+        fs::create_dir_all(&bin_dir).unwrap();
+        let wrapped = tmp.join("libexec/tyyt/mpv");
+        touch_exe(&wrapped);
+
+        let other_root = tempfile_dir();
+        let system_mpv = other_root.join("mpv");
+        touch_exe(&system_mpv);
+
+        let got = resolve_mpv_path(None, Some(&bin_dir), &[other_root]).unwrap();
+        assert_eq!(got, wrapped);
+    }
+
+    #[test]
+    fn path_lookup_finds_binary() {
+        let tmp = tempfile_dir();
+        let mpv = tmp.join("mpv");
         touch_exe(&mpv);
-        let got = resolve_mpv_path(None, None, None, &[tmp.as_path()]).unwrap();
+        let got = resolve_mpv_path(None, None, &[tmp.clone()]).unwrap();
         assert_eq!(got, mpv);
+    }
+
+    #[test]
+    fn not_found_mentions_install_or_env() {
+        let err = resolve_mpv_path(None, None, &[]).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(msg.contains("TYYT_MPV") || msg.to_lowercase().contains("install"));
     }
 
     fn tempfile_dir() -> PathBuf {

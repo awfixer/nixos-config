@@ -1,10 +1,10 @@
-//! YouTube search and stream resolution via **vendored** youtube-dl (yt-dlp).
+//! YouTube search and stream resolution via an extractor subprocess.
 //!
-//! No system `yt-dlp` / `youtube-dl` install is required. Resolution order:
+//! Uses a system or packaged yt-dlp (or `youtube-dl`-compatible binary).
+//! Resolution order:
 //! 1. `TYYT_YOUTUBE_DL` env override
 //! 2. Binary next to the running executable / `libexec/tyyt/youtube-dl`
-//! 3. Compile-time vendored standalone binary (`vendor/bin/youtube-dl`)
-//! 4. Compile-time vendored Python tree (`vendor/youtube-dl`) via `python3 -m yt_dlp`
+//! 3. `yt-dlp` or `youtube-dl` on `PATH`
 
 mod models;
 
@@ -16,30 +16,21 @@ use std::process::Command;
 use std::sync::OnceLock;
 use tracing::{debug, info, warn};
 
-/// How we invoke the vendored extractor.
-#[derive(Debug, Clone)]
-enum YtInvoker {
-    /// Standalone executable (PyInstaller build of yt-dlp).
-    Binary(PathBuf),
-    /// `python3 -m yt_dlp` with PYTHONPATH = source tree root.
-    Python { python: PathBuf, src_root: PathBuf },
-}
+static EXTRACTOR: OnceLock<Result<PathBuf, String>> = OnceLock::new();
 
-static INVOKER: OnceLock<Result<YtInvoker, String>> = OnceLock::new();
-
-fn invoker() -> Result<&'static YtInvoker> {
-    INVOKER
-        .get_or_init(|| resolve_invoker().map_err(|e| e.to_string()))
+fn extractor() -> Result<&'static PathBuf> {
+    EXTRACTOR
+        .get_or_init(|| resolve_extractor().map_err(|e| e.to_string()))
         .as_ref()
         .map_err(|e| anyhow!("{e}"))
 }
 
-fn resolve_invoker() -> Result<YtInvoker> {
+fn resolve_extractor() -> Result<PathBuf> {
     if let Ok(p) = std::env::var("TYYT_YOUTUBE_DL") {
         let path = PathBuf::from(p);
         if path.is_file() {
             info!(path = %path.display(), "using TYYT_YOUTUBE_DL");
-            return Ok(YtInvoker::Binary(path));
+            return Ok(path);
         }
         bail!("TYYT_YOUTUBE_DL is set but not a file: {}", path.display());
     }
@@ -53,101 +44,45 @@ fn resolve_invoker() -> Result<YtInvoker> {
             // $out/bin/tyyt → $out/libexec/tyyt/youtube-dl
             if let Some(prefix) = dir.parent() {
                 candidates.push(prefix.join("libexec/tyyt/youtube-dl"));
-                candidates.push(prefix.join("share/tyyt/youtube-dl/bin/youtube-dl"));
             }
         }
         for c in candidates {
             if c.is_file() {
-                info!(path = %c.display(), "using bundled youtube-dl next to executable");
-                return Ok(YtInvoker::Binary(c));
+                info!(path = %c.display(), "using packaged youtube-dl next to executable");
+                return Ok(c);
             }
         }
     }
 
-    // Compile-time vendored standalone binary.
-    if let Some(bin) = option_env!("TYYT_VENDOR_YT_BIN") {
-        let path = PathBuf::from(bin);
-        if path.is_file() {
-            info!(path = %path.display(), "using vendored standalone youtube-dl");
-            return Ok(YtInvoker::Binary(path));
-        }
-    }
-
-    // Compile-time vendored Python source + interpreter.
-    if let Some(src) = option_env!("TYYT_VENDOR_YT_SRC") {
-        let src_root = PathBuf::from(src);
-        if src_root.join("yt_dlp").is_dir() {
-            let python = find_python()?;
-            info!(
-                src = %src_root.display(),
-                python = %python.display(),
-                "using vendored youtube-dl Python tree"
-            );
-            return Ok(YtInvoker::Python { python, src_root });
-        }
-    }
-
-    // Dev fallback: walk up from CWD for vendor/
-    for root in [PathBuf::from("."), PathBuf::from("..")] {
-        let bin = root.join("vendor/bin/youtube-dl");
-        if bin.is_file() {
-            return Ok(YtInvoker::Binary(bin.canonicalize().unwrap_or(bin)));
-        }
-        let src_root = root.join("vendor/youtube-dl");
-        if src_root.join("yt_dlp").is_dir() {
-            let python = find_python()?;
-            return Ok(YtInvoker::Python {
-                python,
-                src_root: src_root.canonicalize().unwrap_or(src_root),
-            });
+    // System PATH: prefer yt-dlp (actively maintained fork of youtube-dl).
+    for name in ["yt-dlp", "youtube-dl"] {
+        if let Some(p) = find_on_path(name) {
+            info!(name, path = %p.display(), "using system extractor");
+            return Ok(p);
         }
     }
 
     bail!(
-        "vendored youtube-dl not found. Expected vendor/bin/youtube-dl or vendor/youtube-dl \
-         (yt-dlp source). Set TYYT_YOUTUBE_DL to override."
+        "no extractor found. Install yt-dlp (or youtube-dl), \
+         or set TYYT_YOUTUBE_DL to its path."
     );
 }
 
-fn find_python() -> Result<PathBuf> {
-    for name in ["python3", "python"] {
-        if let Ok(out) = Command::new("sh")
-            .args(["-c", &format!("command -v {name}")])
-            .output()
-        {
-            if out.status.success() {
-                let p = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                if !p.is_empty() {
-                    return Ok(PathBuf::from(p));
-                }
-            }
-        }
-    }
-    bail!("python3 required to run vendored youtube-dl source (or ship vendor/bin/youtube-dl)")
+fn find_on_path(name: &str) -> Option<PathBuf> {
+    let dirs = std::env::var_os("PATH")?;
+    std::env::split_paths(&dirs)
+        .map(|dir| dir.join(name))
+        .find(|c| c.is_file())
 }
 
 fn run_yt_dlp(args: &[&str]) -> Result<String> {
-    let inv = invoker()?;
-    debug!(?inv, ?args, "youtube-dl");
+    let bin = extractor()?;
+    debug!(?bin, ?args, "youtube-dl");
 
-    let mut cmd = match inv {
-        YtInvoker::Binary(bin) => {
-            let mut c = Command::new(bin);
-            c.args(args);
-            c
-        }
-        YtInvoker::Python { python, src_root } => {
-            let mut c = Command::new(python);
-            c.env("PYTHONPATH", src_root);
-            c.args(["-m", "yt_dlp"]);
-            c.args(args);
-            c
-        }
-    };
-
-    let out = cmd
+    let out = Command::new(bin)
+        .args(args)
         .output()
-        .with_context(|| format!("failed to spawn vendored youtube-dl ({inv:?})"))?;
+        .with_context(|| format!("failed to spawn extractor ({})", bin.display()))?;
     if !out.status.success() {
         let err = String::from_utf8_lossy(&out.stderr);
         bail!("youtube-dl failed: {err}");
@@ -157,11 +92,8 @@ fn run_yt_dlp(args: &[&str]) -> Result<String> {
 
 /// Public path for diagnostics / UI.
 pub fn youtube_dl_location() -> String {
-    match invoker() {
-        Ok(YtInvoker::Binary(p)) => p.display().to_string(),
-        Ok(YtInvoker::Python { src_root, .. }) => {
-            format!("python3 -m yt_dlp (PYTHONPATH={})", src_root.display())
-        }
+    match extractor() {
+        Ok(p) => p.display().to_string(),
         Err(e) => format!("unavailable: {e}"),
     }
 }
