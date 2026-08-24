@@ -63,6 +63,7 @@
     ./brave-search.nix
     ./t3-code.nix
     ./ghostty.nix
+    ./user-dirs.nix
     #./windscribe.nix
   ];
 }
