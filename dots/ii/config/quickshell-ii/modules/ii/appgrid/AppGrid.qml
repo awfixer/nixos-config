@@ -154,7 +154,6 @@ Scope {
                                 font.pixelSize: Appearance.font.pixelSize.normal
                                 font.family: Appearance.font.family.main
                                 color: Appearance.colors.colOnLayer0
-                                cursorColor: Appearance.colors.colPrimary
                                 clip: true
 
                                 Keys.onEscapePressed: panelWindow.close()
