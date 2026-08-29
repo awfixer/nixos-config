@@ -507,9 +507,6 @@ Singleton {
                 property JsonObject ai: JsonObject {
                     property bool textFadeIn: false
                 }
-                property JsonObject ask: JsonObject {
-                    property bool enable: true
-                }
                 property JsonObject cornerOpen: JsonObject {
                     property bool enable: true
                     property bool bottom: false

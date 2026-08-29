@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://desktop-downloads.kraken.com/latest/kraken-x86_64-unknown-linux-gnu.zip";
-    hash = "sha256-RJV16wokbwFWNtOW4L46LqaOFpKts59G2ejvOX405DU=";
+    hash = "sha256-pa+3m3JDqq9oXTxH//m6i/1rlbndlb9iqAy1H47/67E=";
   };
 
   nativeBuildInputs = [

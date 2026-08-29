@@ -17,9 +17,8 @@
       url = "github:nexu-io/open-design";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Quickshell from upstream master, pinned by commit. The WebEngine support
-    # (unmerged PR Quickshell#351) is applied at build time in
-    # home-manager/quickshell-ii.nix so the sidebar can embed web pages.
+    # Quickshell from upstream master, pinned to the commit dots-hyprland
+    # validates against (nixpkgs' 0.3.0 lags the QML APIs the ii shell uses).
     quickshell = {
       url = "github:quickshell-mirror/quickshell/0fed22a2c47d9568ddf13cf61586b3f2ac4378a2";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -14,11 +14,9 @@ Item {
     anchors.fill: parent
     property bool aiChatEnabled: Config.options.policies.ai !== 0
     property bool translatorEnabled: Config.options.sidebar.translator.enable
-    property bool askEnabled: Config.options.sidebar.ask.enable
     property var tabButtonList: [
         ...(root.aiChatEnabled ? [{"icon": "neurology", "name": Translation.tr("Intelligence")}] : []),
-        ...(root.translatorEnabled ? [{"icon": "translate", "name": Translation.tr("Translator")}] : []),
-        ...(root.askEnabled ? [{"icon": "travel_explore", "name": Translation.tr("Ask")}] : [])
+        ...(root.translatorEnabled ? [{"icon": "translate", "name": Translation.tr("Translator")}] : [])
     ]
     property int tabCount: swipeView.count
 
@@ -86,7 +84,6 @@ Item {
                     ...(root.aiChatEnabled ? [aiChat.createObject()] : []),
                     ...(root.translatorEnabled ? [translator.createObject()] : []),
                     ...((root.tabButtonList.length === 0) ? [placeholder.createObject()] : []),
-                    ...(root.askEnabled ? [ask.createObject()] : []),
                 ]
             }
         }
@@ -98,10 +95,6 @@ Item {
         Component {
             id: translator
             Translator {}
-        }
-        Component {
-            id: ask
-            Ask {}
         }
         Component {
             id: placeholder

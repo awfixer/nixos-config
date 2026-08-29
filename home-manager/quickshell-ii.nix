@@ -21,65 +21,7 @@
 let
   iiDots = ../dots/ii/config;
 
-  # Upstream quickshell + the unmerged WebEngine support (Quickshell#351),
-  # applied here as a source patch: configs declaring
-  # `//@ pragma EnableQtWebEngineQuick` get QtWebEngineQuick::initialize()
-  # called before the QML engine starts, enabling plain WebEngineView usage.
-  #
-  # jemalloc is disabled on purpose: its allocator conflicts with Chromium's
-  # and crashes WebEngine (see PR#351 discussion).
-  qsEngine = (quickshell.packages.${pkgs.system}.default.passthru.unwrapped
-    .overrideAttrs (old: {
-      cmakeFlags = (old.cmakeFlags or [ ]) ++ [ "-DUSE_JEMALLOC=OFF" ];
-      postPatch = (old.postPatch or "") + ''
-        mkdir -p src/webengine
-        cat > src/webengine/webengine.hpp <<'HPP'
-#pragma once
-#include <QDebug>
-#include <QLibrary>
-
-namespace qs::web_engine {
-
-inline bool init() {
-	using InitializeFunc = void (*)();
-
-	QLibrary lib("Qt6WebEngineQuick");
-	if (!lib.load()) {
-		qWarning() << "Failed to load library:" << lib.errorString();
-		qWarning() << "You might need to install the necessary package for Qt6WebEngineQuick.";
-		return false;
-	}
-
-	auto initialize =
-			reinterpret_cast<InitializeFunc>(lib.resolve("_ZN16QtWebEngineQuick10initializeEv"));
-	if (!initialize) {
-		qWarning() << "Failed to resolve symbol 'void QtWebEngineQuick::initialize()'";
-		return false;
-	}
-
-	initialize();
-	qDebug() << "Successfully initialized QtWebEngineQuick";
-	return true;
-}
-
-} // namespace qs::web_engine
-HPP
-        sed -i \
-          -e 's|#include "../ipc/ipc.hpp"|#include "../ipc/ipc.hpp"\n#include "../webengine/webengine.hpp"|' \
-          -e 's|^\([[:space:]]*\)bool useSystemStyle = false;|\1bool useQtWebEngineQuick = false;\n\1bool useSystemStyle = false;|' \
-          -e 's|else if (pragma == "RespectSystemStyle") pragmas.useSystemStyle = true;|else if (pragma == "RespectSystemStyle") pragmas.useSystemStyle = true;\n\t\telse if (pragma == "EnableQtWebEngineQuick") pragmas.useQtWebEngineQuick = true;|' \
-          -e 's|auto qArgC = 0;|auto qArgC = 1;\n\nif (pragmas.useQtWebEngineQuick) {\nweb_engine::init();\n}|' \
-          src/launch/launch.cpp
-      '';
-    }));
-
-  # The upstream "wrapped" derivation, rebuilt against the patched engine.
-  qsBase = (quickshell.packages.${pkgs.system}.default.overrideAttrs (old: {
-    installPhase = ''
-      mkdir -p $out
-      cp -r ${qsEngine}/* $out
-    '';
-  }));
+  qsBase = quickshell.packages.${pkgs.system}.default;
 
   # Python env for ii's theming/image scripts. They do
   #   source $ILLOGICAL_IMPULSE_VIRTUAL_ENV/bin/activate && exec python3 …
@@ -180,7 +122,6 @@ SH
         kdePackages.kdialog
         kdePackages.syntax-highlighting
         kdePackages.qtlocation # geoclue2 position plugin (Weather)
-        qt6.qtwebengine # sidebar Ask tab (embedded Brave Ask via WebEngineView)
       ];
 
       installPhase = ''
@@ -190,8 +131,6 @@ SH
         # journal; warnings and errors still get through.
         makeWrapper ${qsBase}/bin/qs $out/bin/qs \
           --set QT_LOGGING_RULES "*.debug=false" \
-          --set QTWEBENGINE_CHROMIUM_FLAGS "--enable-features=UseOzonePlatform --ozone-platform-hint=auto" \
-          --prefix LD_LIBRARY_PATH : ${pkgs.qt6.qtwebengine}/lib \
           --prefix XDG_DATA_DIRS : ${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name} \
           --prefix PATH : ${lib.makeBinPath runtimeTools}
         runHook postInstall
