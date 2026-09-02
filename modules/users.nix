@@ -7,6 +7,7 @@
     extraGroups = [
       "networkmanager"
       "wheel"
+      "docker"
       # Windscribe helper IPC / firewall owner checks (services.windscribe)
       "windscribe"
     ];

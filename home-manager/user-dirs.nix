@@ -12,6 +12,7 @@
     templates = "$HOME/Templates";
     videos = "$HOME/Videos";
     projects = "$HOME/Projects";
+    setSessionVariables = true;
   };
 
   # No dedicated upstream option for ~/.config/user-dirs.locale.

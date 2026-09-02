@@ -13,8 +13,10 @@
     };
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.7.0";
     # Daemon + static web packages, not the Electron desktop (no Linux release).
+    # Pinned: upstream removed flake.nix in 49cc51058fd7
+    # (chore(nix): retire official Nix distribution, #7644). HEAD is not a flake.
     open-design = {
-      url = "github:nexu-io/open-design";
+      url = "github:nexu-io/open-design/db9ebb7ba84d81dffdd21de248cbcd992c791836";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # Quickshell from upstream master, pinned to the commit dots-hyprland
@@ -56,52 +58,6 @@
         export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
         export PRISMA_SCHEMA_ENGINE_BINARY="${prismaEngines}/bin/schema-engine"
       '';
-    in
-    {
-      packages = {
-        ${system} = {
-          helium-browser = pkgs.callPackage ./packages/helium { };
-          helium-devtools = pkgs.callPackage ./packages/helium-devtools { };
-          buzz = pkgs.callPackage ./packages/buzz { };
-          gloomberb = pkgs.callPackage ./packages/gloomberb { };
-          openwork = pkgs.callPackage ./packages/openwork { };
-          kraken-desktop = pkgs.callPackage ./packages/kraken { };
-          vela-cli = pkgs.callPackage ./packages/vela { };
-          t3-code = pkgs.callPackage ./packages/t3-code { };
-          cline = pkgs.callPackage ./packages/ai-daemon { };
-          kanban = pkgs.callPackage ./packages/kanban { };
-          brave-search = pkgs.callPackage ./packages/brave-search { };
-          open-design-daemon = open-design.packages.${system}.daemon;
-          open-design-web = open-design.packages.${system}.web;
-          #orion-browser = pkgs.callPackage ./packages/orion { };
-          #zen-browser = pkgs.callPackage ./packages/zen-browser { };
-          #windscribe = pkgs.callPackage ./packages/windscribe { };
-
-          # Playwright / Prisma system binaries (for reuse outside the OS config)
-          playwright-test = pkgs.playwright-test;
-          playwright-browsers = playwrightBrowsers;
-          playwright-driver = pkgs.playwright-driver;
-          prisma = pkgs.prisma;
-          prisma-engines = prismaEngines;
-        };
-      };
-
-      # `nix develop ~/nixos-config` — sources hooks so system engines/browsers win
-      devShells.${system}.default = pkgs.mkShell {
-        name = "playwright-prisma";
-        packages = with pkgs; [
-          nodejs_latest
-          playwright-test
-          prisma
-          prisma-engines
-        ];
-        # prisma-engines setup-hook exports PRISMA_SCHEMA_ENGINE_BINARY in pure
-        # nix builds; shellHook covers interactive + npm-local CLI usage.
-        shellHook = playwrightPrismaHook + ''
-          echo "playwright browsers → $PLAYWRIGHT_BROWSERS_PATH"
-          echo "prisma schema-engine → $PRISMA_SCHEMA_ENGINE_BINARY"
-        '';
-      };
 
       nixosConfigurations =
         let
@@ -138,5 +94,53 @@
           # Back-compat for `.#nixos` / older aliases
           nixos = laptop;
         };
+    in
+    {
+      packages = {
+        ${system} = {
+          helium-browser = pkgs.callPackage ./packages/helium { };
+          helium-devtools = pkgs.callPackage ./packages/helium-devtools { };
+          buzz = pkgs.callPackage ./packages/buzz { };
+          gloomberb = pkgs.callPackage ./packages/gloomberb { };
+          openwork = pkgs.callPackage ./packages/openwork { };
+          kraken-desktop = pkgs.callPackage ./packages/kraken { };
+          vela-cli = pkgs.callPackage ./packages/vela { };
+          t3-code = pkgs.callPackage ./packages/t3-code { };
+          cline = pkgs.callPackage ./packages/ai-daemon { };
+          kanban = pkgs.callPackage ./packages/kanban { };
+          brave-search = pkgs.callPackage ./packages/brave-search { };
+          open-design-daemon = open-design.packages.${system}.daemon;
+          open-design-web = open-design.packages.${system}.web;
+          #orion-browser = pkgs.callPackage ./packages/orion { };
+          #zen-browser = pkgs.callPackage ./packages/zen-browser { };
+          #windscribe = pkgs.callPackage ./packages/windscribe { };
+
+          # Playwright / Prisma system binaries (for reuse outside the OS config)
+          playwright-test = pkgs.playwright-test;
+          playwright-browsers = playwrightBrowsers;
+          playwright-driver = pkgs.playwright-driver;
+          prisma = pkgs.prisma;
+          prisma-engines = prismaEngines;
+        };
+      };
+
+      inherit nixosConfigurations;
+
+      # `nix develop ~/nixos-config` — sources hooks so system engines/browsers win
+      devShells.${system}.default = pkgs.mkShell {
+        name = "playwright-prisma";
+        packages = with pkgs; [
+          nodejs_latest
+          playwright-test
+          prisma
+          prisma-engines
+        ];
+        # prisma-engines setup-hook exports PRISMA_SCHEMA_ENGINE_BINARY in pure
+        # nix builds; shellHook covers interactive + npm-local CLI usage.
+        shellHook = playwrightPrismaHook + ''
+          echo "playwright browsers → $PLAYWRIGHT_BROWSERS_PATH"
+          echo "prisma schema-engine → $PRISMA_SCHEMA_ENGINE_BINARY"
+        '';
+      };
     };
 }

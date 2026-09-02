@@ -25,7 +25,7 @@
 
     # On-demand only (not session daemons)
     # vesktop → programs.vesktop in vesktop.nix (PipeWire screenshare wrapper)
-    libreoffice-fresh
+    libreoffice-stable
     onlyoffice-desktopeditors
     ente-auth # E2E encrypted 2FA codes + cloud backup
   ];

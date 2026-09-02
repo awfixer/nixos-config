@@ -30,6 +30,7 @@
   environment.systemPackages = with pkgs; [
     ghostty
     gcc
+    obsidian
     zed-editor
     gnumake
     fd

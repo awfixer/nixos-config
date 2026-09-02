@@ -81,7 +81,9 @@
       tyyt = "/home/awfixer/.local/bin/tyyt";
       # Pure flake — hardware is vendored under hosts/laptop (no --impure).
       # GC is a separate `clean` alias; do not thrash the store on every switch.
-      nrs = "clean && sudo nixos-rebuild switch --flake '/home/awfixer/nixos-config#laptop' && sudo systemctl restart home-manager-awfixer.service";
+      # Do not pass --recreate-lock-file / --upgrade / --refresh: those re-resolve
+      # every input from flake.nix URLs on each switch. Use `nfu` to update.
+      nrs = "clean && sudo nixos-rebuild switch --flake '/home/awfixer/nixos-config#laptop' --fallback --verbose --no-reexec && sudo systemctl restart home-manager-awfixer.service";
       hm-act = "sudo systemctl restart home-manager-awfixer.service";
       nfu = "nix flake update";
       astro = "bun astro";

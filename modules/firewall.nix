@@ -34,9 +34,9 @@
 
     # checkReversePath left alone — Tailscale sets "loose" (required for the mesh)
 
-    # No inbound TCP/UDP ports by default.
-    # Tailscale / modules/spotify.nix (mDNS 5353 + Connect 57621) add their own.
-    allowedTCPPorts = [ ];
+    # Expo / Metro (8081). Tailscale / modules/spotify.nix (mDNS 5353 +
+    # Connect 57621) add their own holes via the same option (lists merge).
+    allowedTCPPorts = [ 8081 3000 ];
     allowedUDPPorts = [ ];
     allowedTCPPortRanges = [ ];
     allowedUDPPortRanges = [ ];
