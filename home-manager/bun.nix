@@ -37,7 +37,7 @@ in
   home.file.".bunfig.toml".text = ''
     [install]
     registry = "https://registry1.solved.gg"
-    minimumReleaseAge = 259200
+    minimumReleaseAge = 20
     minimumReleaseAgeExcludes = [
       "wrangler",
       "workerd",

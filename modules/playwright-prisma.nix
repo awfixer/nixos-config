@@ -11,13 +11,15 @@
 # prisma-engines setup-hook in nixpkgs).
 let
   playwrightBrowsers = pkgs.playwright-driver.browsers;
-  prismaEngines = pkgs.prisma-engines; # alias → prisma-engines_7
+  localPrismaHome = "/home/awfixer/.local/prisma";
+  localSchemaEngine = "${localPrismaHome}/bin/schema-engine";
+  localPrismaFmt = "${localPrismaHome}/bin/prisma-fmt";
 in
 {
   environment.systemPackages = with pkgs; [
     playwright-test # `playwright` CLI, default BROWSERS_PATH
-    prisma # `prisma` CLI, wraps schema-engine
-    prisma-engines # engines + setup-hook for nix shells
+    prisma # `prisma` CLI, wraps schema-engine (7.x fallback)
+    prisma-engines # engines + setup-hook for nix shells (7.x fallback)
   ];
 
   environment.sessionVariables = {
@@ -26,8 +28,12 @@ in
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
     PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
 
-    # Prisma (npm / bun local CLI uses these instead of downloaded engines)
-    PRISMA_SCHEMA_ENGINE_BINARY = "${prismaEngines}/bin/schema-engine";
+    # Prisma 8 engines built on this machine (~/.local/prisma). The 7.x
+    # nixpkgs engines remain installed as a fallback for `nix develop`.
+    PRISMA_HOME = localPrismaHome;
+    PRISMA_SCHEMA_ENGINE_BINARY = localSchemaEngine;
+    PRISMA_FMT_BINARY = localPrismaFmt;
+    PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
   };
 
   # Ensure login shells and non-interactive systemd user sessions also see them.
@@ -35,6 +41,9 @@ in
     PLAYWRIGHT_BROWSERS_PATH = "${playwrightBrowsers}";
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
     PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
-    PRISMA_SCHEMA_ENGINE_BINARY = "${prismaEngines}/bin/schema-engine";
+    PRISMA_HOME = localPrismaHome;
+    PRISMA_SCHEMA_ENGINE_BINARY = localSchemaEngine;
+    PRISMA_FMT_BINARY = localPrismaFmt;
+    PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
   };
 }

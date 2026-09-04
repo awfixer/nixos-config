@@ -16,9 +16,19 @@
     # Preserve existing sourced env
     initContent = ''
       . "$HOME/.vite-plus/env"
+      . "$HOME/.railway/env"
       . "$HOME/.local/bin/env"
       . "$HOME/.executor/bin/env"
+      export PATH="/home/awfixer/.bun/install/global/~/.bun/bin:$PATH"
       export PATH="/home/awfixer/.bun/bin:$PATH"
+      # Local Prisma 8 engines/CLI (built into ~/.local/prisma, symlinked in ~/.local/bin).
+      # ~/.local/bin/env already prepends ~/.local/bin so `prisma` / `schema-engine`
+      # win over the NixOS 7.10.0 system packages. These env vars stop the CLI
+      # from trying to download linux-nixos engines that do not exist.
+      export PRISMA_HOME="$HOME/.local/prisma"
+      export PRISMA_SCHEMA_ENGINE_BINARY="$PRISMA_HOME/bin/schema-engine"
+      export PRISMA_FMT_BINARY="$PRISMA_HOME/bin/prisma-fmt"
+      export PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
       # illogical-impulse: apply wallpaper-generated terminal colors
       [ -f "$HOME/.local/state/quickshell/user/generated/terminal/sequences.txt" ] \
         && cat "$HOME/.local/state/quickshell/user/generated/terminal/sequences.txt"
@@ -57,7 +67,6 @@
         "sudo"
         "copyfile"
         "dirhistory"
-        "history"
         "zsh-interactive-cd"
         "zsh-navigation-tools"
         "zoxide"

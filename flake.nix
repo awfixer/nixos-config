@@ -19,10 +19,11 @@
       url = "github:nexu-io/open-design/db9ebb7ba84d81dffdd21de248cbcd992c791836";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Quickshell from upstream master, pinned to the commit dots-hyprland
-    # validates against (nixpkgs' 0.3.0 lags the QML APIs the ii shell uses).
+    # Quickshell pinned to the commit upstream dots-hyprland (illogical-impulse)
+    # validates against (sdata/dist-nix/home-manager/flake.nix). nixpkgs' 0.3.0
+    # lags the QML APIs the ii config uses.
     quickshell = {
-      url = "github:quickshell-mirror/quickshell/0fed22a2c47d9568ddf13cf61586b3f2ac4378a2";
+      url = "github:quickshell-mirror/quickshell/7511545ee20664e3b8b8d3322c0ffe7567c56f7a";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -50,13 +51,28 @@
       #   prisma → prisma_7, prisma-engines → prisma-engines_7
       playwrightBrowsers = pkgs.playwright-driver.browsers;
       prismaEngines = pkgs.prisma-engines;
+      # Locally-built Prisma 8 engines (see ~/.local/prisma). Prefer these over
+      # nixpkgs prisma-engines_7 so the CLI does not fetch linux-nixos binaries.
+      localPrismaHome = "/home/awfixer/.local/prisma";
+      localSchemaEngine = "${localPrismaHome}/bin/schema-engine";
+      localPrismaFmt = "${localPrismaHome}/bin/prisma-fmt";
 
       # Shared env so project-local npm/bun playwright & prisma use system bins.
       playwrightPrismaHook = ''
         export PLAYWRIGHT_BROWSERS_PATH="${playwrightBrowsers}"
         export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
         export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-        export PRISMA_SCHEMA_ENGINE_BINARY="${prismaEngines}/bin/schema-engine"
+        export PRISMA_HOME="${localPrismaHome}"
+        if [ -x "${localSchemaEngine}" ]; then
+          export PRISMA_SCHEMA_ENGINE_BINARY="${localSchemaEngine}"
+        else
+          export PRISMA_SCHEMA_ENGINE_BINARY="${prismaEngines}/bin/schema-engine"
+        fi
+        if [ -x "${localPrismaFmt}" ]; then
+          export PRISMA_FMT_BINARY="${localPrismaFmt}"
+        fi
+        export PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+        export PATH="${localPrismaHome}/bin:$HOME/.local/bin:$PATH"
       '';
 
       nixosConfigurations =
@@ -140,6 +156,7 @@
         shellHook = playwrightPrismaHook + ''
           echo "playwright browsers → $PLAYWRIGHT_BROWSERS_PATH"
           echo "prisma schema-engine → $PRISMA_SCHEMA_ENGINE_BINARY"
+          echo "prisma fmt → ''${PRISMA_FMT_BINARY:-unset}"
         '';
       };
     };
