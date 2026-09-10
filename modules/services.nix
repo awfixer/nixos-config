@@ -18,4 +18,12 @@
   # (modules/spotify.nix) does not need a local sound server.
   services.pulseaudio.enable = false;
   security.rtkit.enable = false;
+
+  # Bluetooth brought back: root daemon + blueman tray/applet for pairing GUI.
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+  services.blueman.enable = true;
+  environment.systemPackages = [ pkgs.bluez ];
 }

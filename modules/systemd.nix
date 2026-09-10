@@ -72,7 +72,7 @@
   services.colord.enable = false;
   services.sysprof.enable = false;
   services.tlp.enable = false;
-  # Audio + Bluetooth are disabled in modules/services.nix (no PipeWire, no bluez).
+  # Audio is disabled in modules/services.nix (no PipeWire, no PulseAudio).
 
   # Optional noise units.
   systemd.coredump.enable = false;
@@ -123,7 +123,7 @@
   systemd.user.sockets.gcr-ssh-agent.enable = false;
   systemd.user.services.speech-dispatcher.enable = false;
   systemd.user.sockets.speech-dispatcher.enable = lib.mkDefault false;
-  # Bluetooth OBEX (file push) — off along with the rest of the BT stack.
+  # Bluetooth OBEX (file push) — off; obexd pulls in extra deps.
   systemd.user.services.obex.enable = false;
 
 }
