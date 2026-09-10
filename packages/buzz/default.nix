@@ -11,11 +11,11 @@
 
 let
   pname = "buzz";
-  version = "0.5.18";
+  version = "0.5.22";
 
   src = fetchurl {
     url = "https://github.com/block/buzz/releases/download/desktop-v${version}/Buzz_${version}_amd64.AppImage";
-    hash = "sha256-0ErOc3u/juQdV3MGG+q7Fx04orrdUSks3Qa8fBhNP3E=";
+    hash = "sha256-RxIQAaHJ7i+8MYZyMm7oor2T2RR4XBZaD8AJR+NJNbE=";
   };
 
   # Upstream AppImage strips bundled GStreamer and expects host plugins

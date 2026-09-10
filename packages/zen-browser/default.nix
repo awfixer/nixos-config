@@ -22,7 +22,7 @@
 
 let
   pname = "zen-browser";
-  version = "1.21.14b";
+  version = "1.21.16b";
   binaryName = "zen";
 in
 stdenv.mkDerivation {
@@ -30,7 +30,7 @@ stdenv.mkDerivation {
 
   src = fetchzip {
     url = "https://github.com/zen-browser/desktop/releases/download/${version}/zen.linux-x86_64.tar.xz";
-    hash = "sha256-GAqKctJrNg5zwFoluZXTKDuBvt416/qaBEQMsGOKUk4=";
+    hash = "sha256-wb3/Dow/IO9679NyG8dN+Qj+oExlY1Lu9iUzWocRkjk=";
   };
 
   nativeBuildInputs = [

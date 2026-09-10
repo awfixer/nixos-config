@@ -11,6 +11,8 @@
       kraken-desktop = final.callPackage ../packages/kraken { };
       vela-cli = final.callPackage ../packages/vela { };
       t3-code = final.callPackage ../packages/t3-code { };
+      grok-bot = final.callPackage ../packages/grok-bot { };
+      macbook-thermal = final.callPackage ../packages/macbook-thermal { };
       brave-search = final.callPackage ../packages/brave-search { };
       #orion-browser = final.callPackage ../packages/orion { };
       #zen-browser = final.callPackage ../packages/zen-browser { };

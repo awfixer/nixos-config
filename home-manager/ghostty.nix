@@ -41,6 +41,8 @@
       # Wayland / GNOME-friendly
       gtk-single-instance = true;
       window-theme = "ghostty";
+      # Ctrl+click opens matched URLs via xdg-open → helium.desktop → helium-open.
+      link-url = true;
 
       # Quality-of-life keybinds (in addition to Ghostty defaults)
       keybind = [

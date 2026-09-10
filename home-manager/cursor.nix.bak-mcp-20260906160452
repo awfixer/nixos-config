@@ -29,17 +29,9 @@ in
 
   programs.mcp = {
     enable = true;
-    servers = {
-      nixos = {
-        command = "uvx";
-        args = [ "mcp-nixos" ];
-      };
-      # Absolute path so FHS/GUI Cursor never depends on a stripped PATH
-      # (plugin still registers bare `1password-mcp`; this hardens User mcp.json).
-      "1password" = {
-        command = "/run/current-system/sw/bin/1password-mcp";
-        args = [ ];
-      };
+    servers.nixos = {
+      command = "uvx";
+      args = [ "mcp-nixos" ];
     };
   };
 

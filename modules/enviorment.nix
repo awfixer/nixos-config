@@ -28,9 +28,18 @@
   # Keep the always-on system set lean. Heavy GUI apps stay as packages but
   # are not started as daemons — open only when needed (RAM is the constraint).
   environment.systemPackages = with pkgs; [
+    beam29Packages.elixir
+    beam29Packages.erlang
+    gleam
+    erlang-language-platform
+    protobuf
+    protocol
     ghostty
     gcc
     obsidian
+    dig
+    nodejs
+    host
     zed-editor
     gnumake
     fd

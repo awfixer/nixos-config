@@ -14,21 +14,17 @@ let
   # Activation writes through Bun into the real, mutable dirs instead.
   # Extra globals you `bun add -g` by hand are left alone (not pruned).
   globalPackages = [
-    "@angular/cli"
+    "@21st-dev/cli"
+    "@earendil-works/pi-agent-core"
+    "@earendil-works/pi-telemetry"
+    "@earendil-works/chord"
+    "@earendil-works/pi-ai"
+    "@earendil-works/pi-tui"
+    "@cline/cli-linux-x64"
     "@earendil-works/pi-coding-agent"
-    "@oh-my-pi/pi-coding-agent"
-    "@oh-my-pi/pi-natives"
-    "@oh-my-pi/pi-natives-linux-x64"
-    "@supabase/cli"
-    "@supabase/mcp-server-supabase"
-    "@xai-official/grok"
     "agent-browser"
     "clerk"
-    "cline"
     "command-code"
-    "eas-cli"
-    "supabase"
-    "wrangler"
   ];
 in
 {
@@ -36,21 +32,17 @@ in
 
   home.file.".bunfig.toml".text = ''
     [install]
-    registry = "https://registry1.solved.gg"
-    minimumReleaseAge = 20
+    minimumReleaseAge = 259200
     minimumReleaseAgeExcludes = [
-      "wrangler",
-      "workerd",
-      "miniflare",
+      "@earendil-works/pi-agent-core",
+      "@earendil-works/chord",
+      "@earendil-works/pi-ai",
+      "@earendil-works/pi-tui",
       "railway",
+      "@earendil-works/pi-coding-agent",
       "clerk",
       "@clerk/cli-linux-x64",
-      "@cloudflare/workerd-linux-arm64",
-      "@cloudflare/workerd-darwin-arm64",
-      "@cloudflare/workerd-windows-64",
-      "@cloudflare/workerd-darwin-64",
-      "@cloudflare/workerd-linux-64",
-      "@tiptap/cli",
+      "@earendil-works/pi-telemetry"
     ]
     optional = false
     peer = false

@@ -62,6 +62,7 @@
     ./cline.nix
     ./brave-search.nix
     ./t3-code.nix
+    ./grok-bot.nix
     ./ghostty.nix
     ./user-dirs.nix
     #./windscribe.nix

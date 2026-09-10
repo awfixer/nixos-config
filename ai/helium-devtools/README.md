@@ -17,7 +17,14 @@ After `nixos-rebuild` / `home-manager switch`:
 
 3. In Grok, Plugins → enable **`helium-devtools`** (the folder plugin under `~/.grok/plugins/`, not `user/<hash>/helium-devtools`) → press `r` or start a new session. `grok plugin list` only shows marketplace installs; `grok inspect` is the truth.
 
-4. Smoke without Grok:
+4. MCP OAuth (Context7, Sentry, Exa, Railway, …): `/mcps` → select the
+   server → **`i`**. That opens an **MCP elicitation card**. Move to
+   **Accept** and press **Enter** — that is what opens the browser
+   (`o` reopens the URL while waiting). A mouse click on “Auth” does not
+   start the loopback callback. After switch, restart Grok. Invocations
+   append to `~/.local/state/helium-open.log`.
+
+5. Smoke without Grok:
 
    ```bash
    curl -sS -m 8 -H 'Accept: application/json, text/event-stream' \

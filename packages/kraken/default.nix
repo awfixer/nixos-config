@@ -17,7 +17,7 @@
 stdenv.mkDerivation rec {
   pname = "kraken-desktop";
   # Pinned against https://desktop-downloads.kraken.com/latest.json
-  version = "1.27.0";
+  version = "1.28.0";
 
   src = fetchurl {
     url = "https://desktop-downloads.kraken.com/latest/kraken-x86_64-unknown-linux-gnu.zip";

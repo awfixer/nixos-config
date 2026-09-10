@@ -1,0 +1,33 @@
+diff --git a/src/window/proxywindow.cpp b/src/window/proxywindow.cpp
+index 8a20dfa..52b9905 100644
+--- a/src/window/proxywindow.cpp
++++ b/src/window/proxywindow.cpp
+@@ -155,6 +155,11 @@ void ProxyWindowBase::ensureQWindow() {
+ 	this->window = this->createQQuickWindow();
+ 	this->window->setFormat(format);
+ 
++	// Allow Qt to drop swapchain/scene-graph memory when a window is hidden
++	// or not renderable instead of keeping a full GPU copy per PanelWindow.
++	this->window->setPersistentGraphics(false);
++	this->window->setPersistentSceneGraph(false);
++
+ 	// needed for vulkan dmabuf import, qt ignores these if not applicable
+ 	auto graphicsConfig = this->window->graphicsConfiguration();
+ 	graphicsConfig.setDeviceExtensions({
+@@ -272,7 +277,7 @@ void ProxyWindowBase::onVisibleChanged() {
+ 	emit this->visibleChanged();
+ }
+ 
+-bool ProxyWindowBase::deleteOnInvisible() const { return false; }
++bool ProxyWindowBase::deleteOnInvisible() const { return true; }
+ 
+ QQuickWindow* ProxyWindowBase::backingWindow() const { return this->window; }
+ QQuickItem* ProxyWindowBase::contentItem() const { return this->mContentItem; }
+@@ -314,6 +319,7 @@ void ProxyWindowBase::setVisibleDirect(bool visible) {
+ 			if (visible) this->polishItems();
+ 			this->window->setVisible(visible);
+ 			this->bBackerVisibility = visible;
++			if (!visible) this->window->releaseResources();
+ 		}
+ 	}
+ }

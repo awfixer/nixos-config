@@ -42,11 +42,11 @@
 
 stdenv.mkDerivation rec {
   pname = "windscribe";
-  version = "2.23.12";
+  version = "2.24.12";
 
   src = fetchurl {
     url = "https://github.com/Windscribe/Desktop-App/releases/download/v${version}/windscribe_${version}_amd64.deb";
-    hash = "sha256-YySYUm5URisCVyO9RL+89gMkQn7C3nToVwujAfArIy4=";
+    hash = "sha256-mielHt6csk9f+8gw24kMOAcA8ygki5Q1G9SOmBHb8vQ=";
   };
 
   nativeBuildInputs = [

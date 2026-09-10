@@ -21,7 +21,7 @@
 let
   iiDots = ../dots/ii/config;
 
-  qsBase = quickshell.packages.${pkgs.system}.default;
+  qsBase = pkgs.callPackage ../packages/quickshell { inherit quickshell; };
 
   # Python env for ii's theming/image scripts. They do
   #   source $ILLOGICAL_IMPULSE_VIRTUAL_ENV/bin/activate && exec python3 …
@@ -85,9 +85,9 @@ SH
     (tesseract.override { enableLanguages = [ "eng" ]; })
   ];
 
-  # Quickshell bundled with every Qt module the ii config imports + gsettings
-  # schemas + a PATH of all runtime tools. Based on upstream
-  # sdata/dist-nix/home-manager/quickshell.nix, extended with makeBinPath.
+  # Patched qs (see packages/quickshell) plus the Qt modules ii actually
+  # imports, gsettings schemas, and a PATH of runtime tools. Based on
+  # upstream sdata/dist-nix/home-manager/quickshell.nix.
   qsWrapped =
     pkgs.stdenv.mkDerivation {
       name = "quickshell-ii";
@@ -102,6 +102,12 @@ SH
         pkgs.qt6.wrapQtAppsHook
       ];
 
+      # Only Qt modules the ii QML tree actually imports. wrapQtAppsHook
+      # otherwise dumps qtmultimedia → qtquick3d, virtualkeyboard, sensors,
+      # timeline, and FluentWinUI3 onto the QML import path (~tens of MB RSS).
+      # kirigami: AppIcon.qml. qt5compat: GraphicalEffects. qtpositioning +
+      # qtlocation: Weather.qml. Video wallpapers go through mpvpaper, not
+      # QtMultimedia. OSK is a custom PanelWindow, not Qt Virtual Keyboard.
       buildInputs = with pkgs; [
         qsBase
         gsettings-desktop-schemas
@@ -109,19 +115,13 @@ SH
         qt6.qtdeclarative
         qt6.qt5compat
         qt6.qtimageformats
-        qt6.qtmultimedia
         qt6.qtpositioning
-        qt6.qtquicktimeline
-        qt6.qtsensors
         qt6.qtsvg
-        qt6.qttools
         qt6.qttranslations
-        qt6.qtvirtualkeyboard
         qt6.qtwayland
         kdePackages.kirigami
-        kdePackages.kdialog
         kdePackages.syntax-highlighting
-        kdePackages.qtlocation # geoclue2 position plugin (Weather)
+        kdePackages.qtlocation
       ];
 
       installPhase = ''
@@ -131,6 +131,9 @@ SH
         # journal; warnings and errors still get through.
         makeWrapper ${qsBase}/bin/qs $out/bin/qs \
           --set QT_LOGGING_RULES "*.debug=false" \
+          --set QT_QUICK_CONTROLS_STYLE Basic \
+          --set QT_IMAGEIO_MAXALLOC 64 \
+          --set MALLOC_CONF "narenas:2,background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:0,abort_conf:true" \
           --prefix XDG_DATA_DIRS : ${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name} \
           --prefix PATH : ${lib.makeBinPath runtimeTools}
         runHook postInstall
@@ -154,7 +157,10 @@ in
 {
   # ---------------------------------------------------------------- config --
   xdg.configFile = {
-    "quickshell/ii".source = "${iiDots}/quickshell-ii";
+    # Out-of-store so QML edits (and qs file-watch reloads) apply without a
+    # rebuild. A store copy of shell.qml was what hid the panel family: qs -c ii
+    # kept running the previous generation while the git tree was being fixed.
+    "quickshell/ii".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nixos-config/dots/ii/config/quickshell-ii";
     "fuzzel".source = "${iiDots}/fuzzel";
     "wlogout".source = "${iiDots}/wlogout";
     "matugen".source = "${iiDots}/matugen";

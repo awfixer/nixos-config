@@ -41,12 +41,17 @@ ShellRoot {
         Config.options.panelFamily = families[nextIndex]
     }
 
+    // LazyLoader + `component:` (not QtQuick.Loader, not `source:`).
+    // `import "panelFamilies"` is required: Quickshell's QML scanner only
+    // synthesizes qs.modules.* qmldirs from the import graph of scanned files.
+    // Loading a family by URL/shellPath skips that scan, every panel import
+    // fails as "module is not installed", and Hyprland gets zero layer surfaces.
     component PanelFamilyLoader: LazyLoader {
         required property string identifier
         property bool extraCondition: true
         active: Config.ready && Config.options.panelFamily === identifier && extraCondition
     }
-    
+
     PanelFamilyLoader {
         identifier: "ii"
         component: IllogicalImpulseFamily {}

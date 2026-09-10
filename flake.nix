@@ -122,6 +122,7 @@
           kraken-desktop = pkgs.callPackage ./packages/kraken { };
           vela-cli = pkgs.callPackage ./packages/vela { };
           t3-code = pkgs.callPackage ./packages/t3-code { };
+          grok-bot = pkgs.callPackage ./packages/grok-bot { };
           cline = pkgs.callPackage ./packages/ai-daemon { };
           kanban = pkgs.callPackage ./packages/kanban { };
           brave-search = pkgs.callPackage ./packages/brave-search { };

@@ -1,0 +1,22 @@
+{
+  "name": "awfixer-nixos",
+  "description": "Grok plugins shipped by this NixOS config. Home Manager installs each one under ~/.grok/plugins/<name>.",
+  "owner": { "name": "awfixer" },
+  "plugins": [
+    {
+      "name": "helium-devtools",
+      "description": "Connect Grok to the already-open daily Helium via the local helium-devtools MCP (DevTools, extensions, cookies, page automation).",
+      "category": "development",
+      "source": { "type": "local", "path": "./helium-devtools" },
+      "keywords": ["helium", "devtools", "cdp", "browser", "mcp", "oauth"]
+    },
+    {
+      "name": "bun",
+      "description": "Force Bun for JavaScript/TypeScript: official docs MCP, reject node/npm/pnpm/yarn, and prefer Bun builtins over packages like ws and sharp.",
+      "category": "development",
+      "source": { "type": "local", "path": "./bun" },
+      "homepage": "https://bun.com/docs",
+      "keywords": ["bun", "javascript", "typescript", "mcp", "npm", "node"]
+    }
+  ]
+}

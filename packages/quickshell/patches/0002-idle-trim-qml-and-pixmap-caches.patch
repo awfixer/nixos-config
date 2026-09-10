@@ -1,0 +1,90 @@
+diff --git a/src/core/generation.cpp b/src/core/generation.cpp
+index 21febc3..4754983 100644
+--- a/src/core/generation.cpp
++++ b/src/core/generation.cpp
+@@ -16,7 +16,9 @@
+ #include <qqmlengine.h>
+ #include <qqmlerror.h>
+ #include <qqmlincubator.h>
++#include <qpixmapcache.h>
+ #include <qquickwindow.h>
++#include <qtimer.h>
+ #include <qtmetamacros.h>
+ 
+ #include "iconimageprovider.hpp"
+@@ -56,6 +58,9 @@ EngineGeneration::EngineGeneration(const QDir& rootPath, QmlScanner scanner)
+ 	this->engine->addImageProvider("qsimage", new QsImageProvider());
+ 	this->engine->addImageProvider("qspixmap", new QsPixmapProvider());
+ 
++	// Qt defaults to a 10MiB pixmap cache; keep decoded images small on low-RAM hosts.
++	QPixmapCache::setCacheLimit(4096);
++
+ 	QsEnginePlugin::runConstructGeneration(*this);
+ }
+ 
+@@ -165,6 +170,9 @@ void EngineGeneration::postReload() {
+ 
+ 	emit this->firePostReload();
+ 	QObject::disconnect(this, &EngineGeneration::firePostReload, nullptr, nullptr);
++
++	this->startIdleTrim();
++	this->trimCaches();
+ }
+ 
+ void EngineGeneration::setWatchingFiles(bool watching) {
+@@ -315,6 +323,28 @@ void EngineGeneration::updateIncubationMode() {
+ 	this->incubationController.setIncubationMode(!this->trackedWindows.empty());
+ }
+ 
++void EngineGeneration::startIdleTrim() {
++	if (this->idleTrimTimer != nullptr || this->engine == nullptr) return;
++
++	this->idleTrimTimer = new QTimer(this);
++	this->idleTrimTimer->setInterval(45000);
++	QObject::connect(this->idleTrimTimer, &QTimer::timeout, this, &EngineGeneration::trimCaches);
++	this->idleTrimTimer->start();
++}
++
++void EngineGeneration::trimCaches() {
++	if (this->engine == nullptr || this->destroying) return;
++
++	this->engine->trimComponentCache();
++	this->engine->collectGarbage();
++
++	for (auto* window: this->trackedWindows) {
++		if (window != nullptr && !window->isVisible()) {
++			window->releaseResources();
++		}
++	}
++}
++
+ EngineGeneration* EngineGeneration::currentGeneration() {
+ 	if (g_generations.size() == 1) {
+ 		return *g_generations.begin();
+diff --git a/src/core/generation.hpp b/src/core/generation.hpp
+index 4543408..670fac8 100644
+--- a/src/core/generation.hpp
++++ b/src/core/generation.hpp
+@@ -11,6 +11,7 @@
+ #include <qqmlincubator.h>
+ #include <qquickwindow.h>
+ #include <qtclasshelpermacros.h>
++#include <qtimer.h>
+ 
+ #include "incubator.hpp"
+ #include "qsintercept.hpp"
+@@ -86,11 +87,14 @@ private slots:
+ 	void onDirectoryChanged();
+ 	void onTrackedWindowDestroyed(QObject* object);
+ 	static void onEngineWarnings(const QList<QQmlError>& warnings);
++	void trimCaches();
+ 
+ private:
+ 	void postReload();
+ 	void updateIncubationMode();
++	void startIdleTrim();
+ 	QVector<QQuickWindow*> trackedWindows;
++	QTimer* idleTrimTimer = nullptr;
+ 	bool incubationControllersLocked = false;
+ 	QHash<const void*, EngineGenerationExt*> extensions;
+ 

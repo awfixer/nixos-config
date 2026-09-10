@@ -85,14 +85,14 @@
   systemd.services.systemd-hostnamed.enable = lib.mkDefault false;
 
   services.journald = {
-    extraConfig = ''
-      SystemMaxUse=50M
-      RuntimeMaxUse=32M
-      MaxRetentionSec=3day
-      MaxFileSec=1day
-      Storage=persistent
-      Compress=yes
-    '';
+    settings.Journal = {
+      SystemMaxUse = "50M";
+      RuntimeMaxUse = "32M";
+      MaxRetentionSec = "3day";
+      MaxFileSec = "1day";
+      Storage = "persistent";
+      Compress = "yes";
+    };
     rateLimitBurst = 100;
     rateLimitInterval = "30s";
   };

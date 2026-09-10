@@ -10,15 +10,15 @@
 let
   chrome-devtools-mcp = buildNpmPackage rec {
     pname = "chrome-devtools-mcp";
-    version = "1.7.0";
+    version = "1.8.0";
 
-    # GitHub tag v1.7.0 does not exist. npm 1.7.0 gitHead is
-    # 774d78f5eef5e610407a0c92fa6ec5ed74b027e8 (chrome-devtools-mcp-v1.7.0).
+    # GitHub tag v1.8.0 does not exist. npm 1.8.0 gitHead is
+    # 45f187b1e3202c9f32ddba913be5d68751c3caa3 (chrome-devtools-mcp-v1.8.0).
     # The published tarball is a rollup bundle; the GitHub tree needs the
     # devtools-frontend submodule plus a TypeScript compile.
     src = fetchurl {
       url = "https://registry.npmjs.org/chrome-devtools-mcp/-/chrome-devtools-mcp-${version}.tgz";
-      hash = "sha256-iVczWGoOzhOEk3kMB+iwg7hXGx0gN6cxJDNNlo0QRtA=";
+      hash = "sha256-rAM0QQzqddEaXrtVX7sBOaSjlN412YzCo7wKlZ8ATN0=";
     };
 
     # Tarball has no lockfile and no production deps. Drop prepare/dev tooling
@@ -27,7 +27,7 @@ let
       cat > package.json <<'EOF'
 {
   "name": "chrome-devtools-mcp",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "MCP server for Chrome DevTools",
   "type": "module",
   "bin": {
@@ -58,13 +58,13 @@ EOF
       cat > package-lock.json <<'EOF'
 {
   "name": "chrome-devtools-mcp",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "chrome-devtools-mcp",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "license": "Apache-2.0",
       "bin": {
         "chrome-devtools": "build/src/bin/chrome-devtools.js",
@@ -88,7 +88,7 @@ EOF
       touch node_modules/.keep
     '';
 
-    npmDepsHash = "sha256-tow/ir6++u8kDSYp4wDYZ9fvK9Z0nw9/QzqVN6uPIfs=";
+    npmDepsHash = "sha256-DOG3vXdKi/jDGfoZ2eRlUQVErQmfhL8hBsaxePjQUhY=";
     nodejs = nodejs_latest;
     nativeBuildInputs = [ makeWrapper ];
 

@@ -45,11 +45,11 @@
 
 let
   pname = "helium";
-  version = "0.15.6.1";
+  version = "0.16.4.1";
 
   src = fetchurl {
     url = "https://github.com/imputnet/helium-linux/releases/download/${version}/${pname}-${version}-x86_64.AppImage";
-    hash = "sha256-OqXMEZOoFu6NZAozde3ApjNWcvivIItIyeG0HbADpDU=";
+    hash = "sha256-z0OoKmW49F/2F3mxjZlyJsTY45keyZJAj4pjoGBjBO8=";
   };
 
   appimageContents = appimageTools.extract { inherit pname version src; };
@@ -147,11 +147,18 @@ stdenv.mkDerivation rec {
       ln -s ${lib.getLib vulkan-loader}/lib/libvulkan.so.1 $out/share/helium/libvulkan.so.1
     fi
 
+    # Literal flags: this package is wrapped with makeBinaryWrapper (C),
+    # which does not expand NIXOS_OZONE_WL / WAYLAND_DISPLAY shell
+    # parameter expansion. That string was passed through as argv and
+    # Chromium treated fragments of it as a URL, which broke
+    # second-instance OAuth tab handoff from grok-build.
     makeWrapper $out/share/helium/helium $out/bin/helium \
       "''${gappsWrapperArgs[@]}" \
       --prefix LD_LIBRARY_PATH : "$out/share/helium:${rpath}" \
       --prefix PATH : "${lib.makeBinPath [ pciutils ]}" \
-      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
+      --add-flags "--ozone-platform-hint=auto" \
+      --add-flags "--enable-features=WaylandWindowDecorations" \
+      --add-flags "--enable-wayland-ime=true"
 
     runHook postInstall
   '';
