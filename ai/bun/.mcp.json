@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "bun": {
+      "type": "http",
+      "url": "https://bun.com/docs/mcp",
+      "note": "Official Bun docs MCP (search_bun, read_bun_page, list_bun_pages, grep_bun). Stateless streamable HTTP. Prefer it over prior knowledge."
+    }
+  }
+}
