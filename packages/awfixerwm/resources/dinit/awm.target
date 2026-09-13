@@ -1,0 +1,6 @@
+type           = internal
+restart        = false
+depends-on:    awm
+waits-for.d:   $XDG_CONFIG_HOME/dinit.d/awm.d/
+waits-for.d:   $HOME/.config/dinit.d/awm.d/
+waits-for.d:   /etc/dinit.d/user/awm.d/

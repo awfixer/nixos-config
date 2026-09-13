@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=AWM
+Comment=A scrollable-tiling Wayland compositor
+Exec=awm-session
+Type=Application
+DesktopNames=awm
