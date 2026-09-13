@@ -24,7 +24,7 @@ let
     };
   };
 
-  activeAccount = "solvedgg";
+  activeAccount = "solved";
   acct = accounts.${activeAccount};
 
   loginPubs = lib.mapAttrs (
